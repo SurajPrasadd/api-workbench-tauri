@@ -13,12 +13,3 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
-
-# Build artifacts
-/bundle/
-*.exe
-*.dmg
-*.AppImage
-*.deb
-*.msi
-*.app
