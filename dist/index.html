@@ -1,0 +1,4545 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Workbench</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+  <style>
+    .CodeMirror {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+      font-size: 12.5px;
+      height: auto;
+      min-height: 160px;
+      background: var(--bg-card);
+      color: var(--t-base);
+    }
+    .CodeMirror-scroll { min-height: 160px; max-height: 360px; }
+    .CodeMirror-gutters { background: var(--bg-muted); border-right: 1px solid var(--border-soft); }
+    .CodeMirror-linenumber { color: var(--t-light); }
+    .CodeMirror-cursor { border-left-color: var(--primary); }
+    .CodeMirror-selected { background: var(--primary-soft); }
+    .CodeMirror-activeline-background { background: var(--bg-hover); }
+    :root[data-theme=dark] .CodeMirror { background: var(--bg-card); }
+    :root[data-theme=dark] .CodeMirror-gutters { background: var(--bg-muted); border-right-color: var(--border); }
+    /* light token colors */
+    :root[data-theme=light] .cm-s-default .cm-string { color: #0f766e; }
+    :root[data-theme=light] .cm-s-default .cm-number { color: #c2410c; }
+    :root[data-theme=light] .cm-s-default .cm-keyword { color: #7c3aed; }
+    :root[data-theme=light] .cm-s-default .cm-atom { color: #7c3aed; }
+    :root[data-theme=light] .cm-s-default .cm-def { color: #1d4ed8; }
+    :root[data-theme=light] .cm-s-default .cm-property { color: #2563eb; }
+    :root[data-theme=light] .cm-s-default .cm-comment { color: #94a3b8; font-style: italic; }
+    .header-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .header-presets .btn { font-size: 11px; padding: 4px 8px; }
+    .decrypted-box {
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: var(--bg-muted);
+      display: none;
+    }
+    .decrypted-box.is-visible { display: block; }
+    .decrypted-box .eyebrow { margin-bottom: 6px; }
+
+
+
+    /* ========== Cozy UI polish ========== */
+    :root {
+      --radius: 14px;
+      --radius-sm: 10px;
+      --shadow-soft: 0 4px 24px rgba(15, 23, 42, 0.06);
+      --shadow-float: 0 12px 40px rgba(15, 23, 42, 0.12);
+    }
+    :root[data-theme=light] {
+      --bg: #f6f3ef;
+      --bg-card: #fffcf8;
+      --bg-muted: #f0ebe4;
+      --bg-hover: #ebe4db;
+      --border: #e5ddd2;
+      --border-soft: #eee7de;
+      --t-base: #3d3429;
+      --t-muted: #7a6f63;
+      --t-light: #a89b8c;
+      --primary: #5b7c6e;
+      --primary-soft: rgba(91, 124, 110, 0.14);
+      --success: #4a7c59;
+      --danger: #c45c4a;
+      --warning: #c4923a;
+      --info: #5a7d9a;
+      --teal: #3d8b7a;
+      --orange: #c47a3a;
+      --purple: #7a6b9a;
+    }
+    :root[data-theme=dark] {
+      --bg: #1a1816;
+      --bg-card: #24201c;
+      --bg-muted: #2c2824;
+      --bg-hover: #35302b;
+      --border: #3d3630;
+      --border-soft: #322e29;
+      --t-base: #ebe4db;
+      --t-muted: #a89b8c;
+      --t-light: #7a6f63;
+      --primary: #8fb5a4;
+      --primary-soft: rgba(143, 181, 164, 0.16);
+      --success: #7cb890;
+      --danger: #e08a7a;
+      --warning: #e0b070;
+      --info: #8aadc4;
+      --teal: #6db5a4;
+      --orange: #e0a060;
+      --purple: #b0a0d0;
+    }
+    body {
+      background: var(--bg);
+      letter-spacing: 0.01em;
+    }
+    .sidebar {
+      background: var(--bg-card);
+      border-right: 1px solid var(--border-soft);
+      box-shadow: 2px 0 16px rgba(0,0,0,0.03);
+    }
+    .card, .response-area, .req-body {
+      border-radius: var(--radius);
+    }
+    .response-area {
+      background: var(--bg-card);
+      box-shadow: var(--shadow-soft);
+    }
+    .btn {
+      border-radius: 999px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      transition: transform .12s ease, box-shadow .12s ease, background .12s;
+    }
+    .btn--primary {
+      box-shadow: 0 4px 14px rgba(91, 124, 110, 0.28);
+    }
+    .btn--primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(91, 124, 110, 0.35);
+    }
+    .input, .select, .textarea, .CodeMirror {
+      border-radius: var(--radius-sm) !important;
+      border-color: var(--border-soft) !important;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .input:focus, .select:focus, .textarea:focus {
+      border-color: var(--primary) !important;
+      box-shadow: 0 0 0 3px var(--primary-soft) !important;
+    }
+    .sidebar-item {
+      border-radius: 12px;
+      padding: 7px 10px;
+    }
+    .sidebar-item.is-active {
+      background: var(--primary-soft);
+      box-shadow: inset 0 0 0 1px rgba(91,124,110,0.15);
+    }
+    .tab {
+      border-radius: 999px;
+      padding: 7px 14px;
+    }
+    .tab.is-active {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+    .topbar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-soft);
+      backdrop-filter: blur(8px);
+    }
+    .request-bar {
+      background: transparent;
+    }
+    .status-code {
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-weight: 600;
+    }
+    .split-resizer {
+      background: transparent;
+      height: 8px;
+      flex-basis: 8px;
+    }
+    .split-resizer:hover, .split-resizer.is-dragging {
+      background: var(--primary-soft);
+    }
+    .vscode-hide { display: none !important; }
+    .vscode-badge {
+      display: none;
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    body.is-vscode .vscode-badge { display: inline-flex; }
+    
+  </style>
+  <style>
+    @import url(https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap);
+
+    :root[data-theme=light] {
+      --bg-body: #f0f4f8;
+      --bg-card: #fff;
+      --bg-sidebar: #fff;
+      --bg-hover: #f8fafc;
+      --bg-muted: #f1f5f9;
+      --t-base: #1e293b;
+      --t-muted: #64748b;
+      --t-light: #94a3b8;
+      --t-inverse: #fff;
+      --border: #e4e8ef;
+      --border-soft: #eef1f5;
+      --primary: #2563eb;
+      --primary-light: #3b82f6;
+      --primary-dark: #1d4ed8;
+      --primary-soft: #eff6ff;
+      --primary-ring: rgba(37, 99, 235, .18);
+      --success: #10b981;
+      --success-soft: #ecfdf5;
+      --warning: #f59e0b;
+      --warning-soft: #fffbeb;
+      --danger: #ef4444;
+      --danger-soft: #fef2f2;
+      --info: #0ea5e9;
+      --info-soft: #f0f9ff;
+      --purple: #8b5cf6;
+      --purple-soft: #f5f3ff;
+      --pink: #ec4899;
+      --pink-soft: #fdf2f8;
+      --teal: #14b8a6;
+      --teal-soft: #f0fdfa;
+      --orange: #f97316;
+      --orange-soft: #fff7ed;
+      --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, .04);
+      --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, .06), 0 1px 2px -1px rgba(15, 23, 42, .04);
+      --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, .08), 0 4px 6px -4px rgba(15, 23, 42, .05);
+      --overlay: rgba(240, 244, 248, .72)
+    }
+
+    :root[data-theme=dark] {
+      --bg-body: #0b1120;
+      --bg-card: #141b2d;
+      --bg-sidebar: #141b2d;
+      --bg-hover: #1c2438;
+      --bg-muted: #1a2237;
+      --t-base: #f1f5f9;
+      --t-muted: #94a3b8;
+      --t-light: #64748b;
+      --t-inverse: #0b1120;
+      --border: #222c42;
+      --border-soft: #1a2237;
+      --primary: #60a5fa;
+      --primary-light: #93c5fd;
+      --primary-dark: #3b82f6;
+      --primary-soft: #0f2847;
+      --primary-ring: rgba(96, 165, 250, .24);
+      --success: #34d399;
+      --success-soft: #0f2a20;
+      --warning: #fbbf24;
+      --warning-soft: #2b1f08;
+      --danger: #f87171;
+      --danger-soft: #2b1414;
+      --info: #38bdf8;
+      --info-soft: #0d2232;
+      --purple: #a78bfa;
+      --purple-soft: #1e1a2c;
+      --pink: #f472b6;
+      --pink-soft: #2a1424;
+      --teal: #2dd4bf;
+      --teal-soft: #0e2826;
+      --orange: #fb923c;
+      --orange-soft: #2a1810;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, .4);
+      --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, .3), 0 1px 2px -1px rgba(0, 0, 0, .25);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, .5), 0 4px 6px -4px rgba(0, 0, 0, .4);
+      --overlay: rgba(11, 17, 32, .72)
+    }
+
+    *, :after, :before { box-sizing: border-box }
+    body, html { margin: 0; padding: 0; height: 100% }
+    a { text-decoration: none }
+    a, button { color: inherit }
+    button { background: none; border: 0; cursor: pointer; font: inherit; padding: 0 }
+    ol, ul { list-style: none; margin: 0; padding: 0 }
+    img, svg { display: block; max-width: 100% }
+    input, textarea, select { color: inherit; font: inherit }
+
+    body {
+      background: var(--bg-body);
+      color: var(--t-base);
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0.01em;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      font-feature-settings: "kern" 1, "liga" 1;
+      transition: background-color .28s ease, color .28s ease;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    ::selection { background: var(--primary); color: #fff }
+    .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace }
+    .eyebrow {
+      color: var(--t-light);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .18em;
+      text-transform: uppercase
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding: 22px
+    }
+
+    .field { flex-direction: column; min-width: 0 }
+    .field, .field-label { display: flex; gap: 6px }
+    .field-label { align-items: center; color: var(--t-base); font-size: 12px; font-weight: 600; letter-spacing: -.005em }
+    .field-help { color: var(--t-muted); font-size: 11.5px; line-height: 1.45 }
+
+    .input, .select, .textarea {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--t-base);
+      font-family: inherit;
+      font-size: 13px;
+      outline: 0;
+      padding: 9px 12px;
+      transition: border-color .18s, box-shadow .18s, background .18s;
+      width: 100%
+    }
+    .input::placeholder, .textarea::placeholder { color: var(--t-light) }
+    .input:focus, .select:focus, .textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft) }
+    .textarea { line-height: 1.5; min-height: 96px; resize: vertical }
+    .select {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2364748B%27 stroke-width=%272%27><path d=%27m6 9 6 6 6-6%27/></svg>");
+      background-position: right 10px center;
+      background-repeat: no-repeat;
+      padding-right: 32px
+    }
+
+    .btn {
+      align-items: center;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      display: inline-flex;
+      font-size: 13px;
+      font-weight: 600;
+      gap: 8px;
+      padding: 9px 14px;
+      transition: all .18s ease;
+      white-space: nowrap
+    }
+    .btn svg { fill: none; height: 14px; stroke: currentColor; stroke-width: 2; width: 14px }
+    .btn--ghost { background: var(--bg-card); border-color: var(--border); color: var(--t-base) }
+    .btn--ghost:hover { border-color: var(--t-light); box-shadow: var(--shadow-sm) }
+    .btn--primary { background: var(--primary); box-shadow: 0 1px 2px var(--primary-ring); color: #fff }
+    .btn--primary:hover { background: var(--primary-dark) }
+    .btn--danger { background: var(--danger-soft); border-color: var(--danger); color: var(--danger) }
+    .btn--sm { font-size: 11.5px; padding: 6px 10px }
+    .btn-group { border-radius: 8px; box-shadow: 0 0 0 1px var(--border); display: inline-flex; overflow: hidden }
+    .btn-group .btn { border: 0; border-radius: 0; border-right: 1px solid var(--border); box-shadow: none }
+    .btn-group .btn:last-child { border-right: 0 }
+    .btn-group .btn.is-active { background: var(--primary-soft); color: var(--primary) }
+
+    .icon-btn {
+      border-radius: 8px;
+      color: var(--t-muted);
+      display: grid;
+      height: 32px;
+      place-items: center;
+      position: relative;
+      transition: background .18s, color .18s;
+      width: 32px
+    }
+    .icon-btn:hover { background: var(--bg-hover); color: var(--t-base) }
+    .icon-btn > svg { fill: none; height: 16px; stroke: currentColor; stroke-width: 1.8; width: 16px }
+
+    .badge {
+      align-items: center;
+      background: var(--bg-muted);
+      border-radius: 999px;
+      color: var(--t-muted);
+      display: inline-flex;
+      font-size: 10.5px;
+      font-weight: 600;
+      gap: 4px;
+      letter-spacing: .02em;
+      line-height: 1.4;
+      padding: 3px 8px
+    }
+    .badge.primary { background: var(--primary-soft); color: var(--primary) }
+    .badge.success { background: var(--success-soft); color: var(--success) }
+    .badge.danger { background: var(--danger-soft); color: var(--danger) }
+    .badge.warning { background: var(--warning-soft); color: var(--warning) }
+    .badge.dot:before { background: currentColor; border-radius: 50%; content: ""; height: 6px; width: 6px }
+
+    .tabs { border-bottom: 1px solid var(--border); display: flex; gap: 4px; margin-bottom: 0; flex-wrap: wrap }
+    .tab {
+      border-bottom: 2px solid transparent;
+      color: var(--t-muted);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 10px 14px;
+      position: relative;
+      top: 1px;
+      transition: color .16s, border-color .16s
+    }
+    .tab:hover { color: var(--t-base) }
+    .tab.is-active { border-bottom-color: var(--primary); color: var(--primary); font-weight: 600 }
+    .tabs.pills { background: var(--bg-muted); border-bottom: 0; border-radius: 9px; display: inline-flex; padding: 3px }
+    .tabs.pills .tab { border-bottom: 0; border-radius: 7px; font-size: 12.5px; padding: 7px 12px; top: 0 }
+    .tabs.pills .tab.is-active { background: var(--bg-card); box-shadow: var(--shadow-sm); color: var(--t-base) }
+
+    .alert {
+      align-items: start;
+      background: var(--bg-muted);
+      border-left: 3px solid var(--t-muted);
+      border-radius: 10px;
+      color: var(--t-base);
+      display: grid;
+      font-size: 13px;
+      gap: 12px;
+      grid-template-columns: 24px 1fr auto;
+      line-height: 1.5;
+      padding: 14px 16px
+    }
+    .alert .ico { border-radius: 6px; color: var(--t-muted); display: grid; flex-shrink: 0; height: 20px; place-items: center; width: 20px }
+    .alert .ico svg { fill: none; height: 14px; stroke: currentColor; stroke-width: 2; width: 14px }
+    .alert .body { min-width: 0 }
+    .alert .title { color: var(--t-base); font-weight: 600; margin-bottom: 2px }
+    .alert.success { background: var(--success-soft); border-left-color: var(--success) }
+    .alert.success .ico { background: color-mix(in oklab, var(--success) 14%, transparent); color: var(--success) }
+    .alert.danger { background: var(--danger-soft); border-left-color: var(--danger) }
+    .alert.danger .ico { background: color-mix(in oklab, var(--danger) 14%, transparent); color: var(--danger) }
+    .alert.warning { background: var(--warning-soft); border-left-color: var(--warning) }
+    .alert.info { background: var(--info-soft); border-left-color: var(--info) }
+
+    /* Layout */
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      height: 100vh;
+      overflow: hidden;
+    }
+    @media (max-width: 900px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .sidebar.is-open { display: flex; position: fixed; inset: 0; z-index: 100; }
+    }
+
+    .sidebar {
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sidebar-head {
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid var(--border-soft);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .sidebar-brand {
+      font-family: "Inter Tight", "Inter", system-ui, sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sidebar-brand .accent { color: var(--primary) }
+    .sidebar-section {
+      padding: 12px 12px 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sidebar-section .eyebrow { margin: 0 }
+    .sidebar-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 8px 12px;
+    }
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--t-base);
+      transition: background .15s;
+      margin-bottom: 2px;
+    }
+    .sidebar-item:hover { background: var(--bg-hover) }
+    .sidebar-item.is-active { background: var(--primary-soft); color: var(--primary); font-weight: 600 }
+    .sidebar-item .method {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      font-weight: 700;
+      min-width: 42px;
+      text-transform: uppercase;
+    }
+    .method-get { color: var(--success) }
+    .method-post { color: var(--warning) }
+    .method-put { color: var(--info) }
+    .method-patch { color: var(--purple) }
+    .method-delete { color: var(--danger) }
+    .method-head, .method-options { color: var(--t-muted) }
+    .sidebar-item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+    .sidebar-item { position: relative; }
+    .sidebar-search { position: relative; padding: 10px 10px 2px; }
+    .sidebar-search .input { width: 100%; padding: 7px 28px 7px 30px; font-size: 12.5px; }
+    .sidebar-search .ss-icon { position: absolute; left: 20px; top: 50%; margin-top: 4px; transform: translateY(-50%); color: var(--t-muted); pointer-events: none; }
+    .sidebar-search .ss-clear { position: absolute; right: 16px; top: 50%; margin-top: 4px; transform: translateY(-50%); }
+    .sidebar-empty { padding: 14px 10px; font-size: 12.5px; color: var(--t-muted); text-align: center; }
+    /* Actions float over the row on hover instead of reserving space, so long names stay readable */
+    .sidebar-item .item-actions {
+      display: inline-flex;
+      gap: 2px;
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 1px 2px;
+      border-radius: 6px;
+      background: var(--bg-hover);
+      justify-content: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .12s;
+    }
+    .sidebar-item:hover .item-actions {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .sidebar-folder {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--t-muted);
+      padding: 6px 6px 4px 8px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      border-radius: 8px;
+      user-select: none;
+    }
+    .sidebar-folder:hover { background: var(--bg-hover); color: var(--t-base); }
+    .sidebar-folder .folder-chevron {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      transition: transform .15s;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+    .sidebar-folder.is-collapsed .folder-chevron { transform: rotate(-90deg); }
+    .sidebar-folder .folder-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sidebar-folder .folder-actions {
+      display: inline-flex;
+      gap: 2px;
+      flex-shrink: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .12s;
+    }
+    .sidebar-folder:hover .folder-actions { opacity: 1; pointer-events: auto; }
+    .sidebar-req-group { margin-bottom: 4px; }
+    .sidebar-req-group.is-collapsed { display: none; }
+    .sidebar-footer {
+      padding: 12px;
+      border-top: 1px solid var(--border-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .main {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
+      flex-shrink: 0;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap }
+    .topbar-right { display: flex; align-items: center; gap: 8px }
+
+    .cd-theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 12px 6px 10px;
+      cursor: pointer;
+      user-select: none
+    }
+    .cd-theme-toggle svg { width: 14px; height: 14px; stroke: var(--t-muted); fill: none; stroke-width: 2 }
+    .switch { align-items: center; color: var(--t-base); cursor: pointer; display: inline-flex; font-size: 13px; gap: 10px; user-select: none }
+    .switch input { opacity: 0; pointer-events: none; position: absolute }
+    .switch .track { background: var(--bg-muted); border: 1px solid var(--border); border-radius: 999px; flex-shrink: 0; height: 20px; position: relative; transition: background .2s; width: 34px }
+    .switch .track:after { background: #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.2); content: ""; height: 14px; left: 2px; position: absolute; top: 2px; transition: transform .2s cubic-bezier(.2,.7,.2,1); width: 14px }
+    .switch input:checked + .track { background: var(--primary); border-color: var(--primary) }
+    .switch input:checked + .track:after { transform: translateX(14px) }
+
+    .request-bar {
+      display: flex;
+      gap: 8px;
+      padding: 16px 20px 12px;
+      align-items: stretch;
+      flex-shrink: 0;
+    }
+    .request-bar .method-select { width: 110px; flex-shrink: 0; font-weight: 600 }
+    .request-bar .url-input { flex: 1; font-family: "JetBrains Mono", monospace; font-size: 13px }
+    .request-bar .send-btn { flex-shrink: 0; min-width: 90px; justify-content: center }
+
+    .req-tabs-wrap {
+      padding: 0 20px;
+      flex-shrink: 0;
+    }
+    .req-body {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .req-panel {
+      display: none;
+      flex: 1;
+      overflow: auto;
+      padding: 16px 20px;
+      min-height: 0;
+    }
+    .req-panel.is-active { display: flex; flex-direction: column }
+
+    .kv-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .kv-table th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--t-muted);
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .kv-table td {
+      padding: 4px 4px;
+      border-bottom: 1px solid var(--border-soft);
+      vertical-align: middle;
+    }
+    .kv-table .input { padding: 7px 10px; font-size: 12.5px }
+    .kv-table .kv-check { width: 28px; text-align: center }
+    .kv-table .kv-del { width: 36px }
+    .kv-table .kv-key { width: 30% }
+    .kv-table .kv-value { width: auto }
+
+    .body-type-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .split-view {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .split-view .req-body {
+      flex: 1 1 50%;
+      min-height: 80px;
+      overflow: auto;
+    }
+    .split-resizer {
+      flex: 0 0 6px;
+      cursor: row-resize;
+      background: var(--border-soft);
+      position: relative;
+      z-index: 5;
+      transition: background .15s;
+    }
+    .split-resizer:hover,
+    .split-resizer.is-dragging {
+      background: var(--primary);
+    }
+    .split-resizer::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 32px;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--t-light);
+      opacity: .6;
+    }
+    .response-area {
+      flex: 1 1 50%;
+      min-height: 100px;
+      border-top: none;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg-card);
+    }
+    .split-view.is-response-only .req-body { display: none; }
+    .split-view.is-response-only .split-resizer { display: none; }
+    .split-view.is-response-only .response-area { flex: 1 1 100%; min-height: 0; }
+    .split-view.is-request-only .response-area { display: none; }
+    .split-view.is-request-only .split-resizer { display: none; }
+    .split-view.is-request-only .req-body { flex: 1 1 100%; }
+
+    /* Response floating / fullscreen modes */
+    .response-area.is-fullscreen {
+      position: fixed;
+      inset: 12px;
+      z-index: 9000;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+      min-height: 0;
+    }
+    .response-area.is-floating {
+      position: fixed;
+      z-index: 8500;
+      width: min(720px, 90vw);
+      height: min(480px, 70vh);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 16px 48px rgba(0,0,0,.22);
+      resize: both;
+      overflow: hidden;
+    }
+    .response-fs-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      z-index: 8990;
+    }
+    .response-fs-backdrop.is-visible { display: block; }
+    .response-head { cursor: default; }
+    .response-area.is-floating .response-head {
+      cursor: move;
+      user-select: none;
+    }
+    .icon-btn.is-active {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+    .response-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border-soft);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .response-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .response-body {
+      flex: 1;
+      overflow: auto;
+      padding: 12px 20px;
+      min-height: 0;
+    }
+    .response-body textarea {
+      width: 100%;
+      min-height: 200px;
+      height: 100%;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12.5px;
+      white-space: pre;
+      resize: none;
+      border: 0;
+      background: transparent;
+      padding: 0;
+    }
+    .response-body textarea:focus { box-shadow: none }
+
+    /* Tree view (from CipherDeck) */
+    .jt-tree {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12.5px;
+      line-height: 1.8;
+      padding: 4px 0;
+      overflow: auto;
+    }
+    .jt-tree-empty { color: var(--t-light); font-size: 12.5px; padding: 6px 2px }
+    .jt-node-head, .jt-leaf { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0; padding: 1px 4px; margin: 0 -4px; border-radius: 4px }
+    .jt-node-head:hover, .jt-leaf:hover { background: var(--bg-hover) }
+    .jt-toggle { background: none; border: 0; cursor: pointer; color: var(--t-muted); width: 16px; flex: 0 0 auto; font-size: 10px; padding: 0; line-height: 1.8 }
+    .jt-toggle:hover { color: var(--primary) }
+    .jt-toggle-spacer { width: 16px; display: inline-block; flex: 0 0 auto }
+    .jt-key { color: var(--primary); font-weight: 500 }
+    .jt-index { color: var(--t-light); font-style: italic }
+    .jt-bracket, .jt-tag { color: var(--t-base); font-weight: 600 }
+    .jt-count { color: var(--t-light); font-size: 11px; margin-left: 6px }
+    .jt-preview { color: var(--t-light); font-style: italic }
+    .jt-string { color: var(--teal) }
+    .jt-number { color: var(--orange) }
+    .jt-bool { color: var(--purple) }
+    .jt-null { color: var(--t-muted); font-style: italic }
+    .jt-children { margin-left: 8px; padding-left: 12px; border-left: 1px dashed var(--border) }
+    .jt-node-close { color: var(--t-base); font-weight: 600; padding: 1px 4px }
+    .jt-node.is-collapsed > .jt-node-head { color: var(--t-muted) }
+
+    .console-box {
+      background: var(--bg-muted);
+      color: var(--t-base);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11.5px;
+      line-height: 1.6;
+      padding: 10px 12px;
+      min-height: 100px;
+      max-height: 180px;
+      overflow-y: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .console-box .sc-log { color: var(--t-base) }
+    .console-box .sc-warn { color: var(--warning) }
+    .console-box .sc-error { color: var(--danger) }
+    .console-box .sc-info { color: var(--info) }
+    .console-box .sc-empty { color: var(--t-light) }
+
+    .env-var-hint {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      color: var(--t-light);
+      margin-top: 4px;
+    }
+    .env-var-hint code {
+      background: var(--bg-muted);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: var(--primary);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--overlay);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.is-open { display: flex }
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 560px;
+      max-height: 85vh;
+      overflow: auto;
+      padding: 24px;
+    }
+    .modal-wide { max-width: 720px }
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .modal-title {
+      font-family: "Inter Tight", "Inter", system-ui, sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: -.02em;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .status-code {
+      font-family: "JetBrains Mono", monospace;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .status-2xx { color: var(--success) }
+    .status-3xx { color: var(--info) }
+    .status-4xx { color: var(--warning) }
+    .status-5xx { color: var(--danger) }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12.5px;
+    }
+    .history-item:hover { background: var(--bg-hover) }
+    .history-item .time { color: var(--t-light); font-size: 11px; margin-left: auto }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--t-muted);
+    }
+    .empty-state h3 {
+      font-family: "Inter Tight", "Inter", system-ui, sans-serif;
+      font-size: 16px;
+      color: var(--t-base);
+      margin: 0 0 8px;
+    }
+
+    .form-data-file {
+      font-size: 12px;
+      color: var(--t-muted);
+    }
+
+    .saved-responses {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    /* ---- Compact UI densification ---- */
+    .sidebar { font-size: 12.5px; }
+    .sidebar-head { padding: 10px 12px 8px; }
+    .sidebar-section { padding: 8px 10px 2px; }
+    .sidebar-list { padding: 2px 6px 8px; }
+    .sidebar-item {
+      padding: 5px 8px;
+      gap: 6px;
+      margin-bottom: 1px;
+      border-radius: 6px;
+      font-size: 12.5px;
+    }
+    .sidebar-item .method { font-size: 9.5px; min-width: 38px; }
+    .sidebar-item .item-actions { width: 52px; }
+    .sidebar-item .item-actions .icon-btn { width: 26px; height: 26px; }
+    .sidebar-folder { padding: 4px 4px 3px 6px; font-size: 10.5px; gap: 2px; }
+    .sidebar-folder .folder-actions .icon-btn { width: 26px; height: 26px; }
+    .sidebar-footer { padding: 8px 10px; gap: 6px; }
+    .sidebar-footer .btn { padding: 6px 10px; font-size: 12px; }
+
+    .topbar { padding: 8px 14px; gap: 8px; }
+    .request-bar { padding: 10px 14px 8px; gap: 6px; }
+    .request-bar .method-select { width: 96px; padding: 7px 10px; font-size: 12.5px; }
+    .request-bar .url-input { padding: 7px 10px; font-size: 12.5px; }
+    .request-bar .send-btn { padding: 7px 14px; }
+    .req-tabs-wrap { padding: 0 14px; }
+    .tab { padding: 8px 12px; font-size: 12.5px; }
+    .req-panel { padding: 10px 14px; }
+    .response-head { padding: 8px 14px; }
+    .response-body { padding: 8px 14px; }
+    .kv-table th { padding: 4px 6px; font-size: 10.5px; }
+    .kv-table td { padding: 2px 3px; }
+    .kv-table .input { padding: 5px 8px; font-size: 12px; }
+    .card { padding: 14px; border-radius: 10px; }
+    .btn--sm { padding: 5px 8px; font-size: 11px; }
+    .icon-btn { width: 28px; height: 28px; }
+
+    /* JSON syntax highlight */
+    .json-pretty {
+      font-family: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+      font-size: 12.5px;
+      line-height: 1.65;
+      white-space: pre;
+      overflow: auto;
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      color: var(--t-base);
+      min-height: 120px;
+    }
+    .json-pretty .jk { color: var(--primary); }          /* key */
+    .json-pretty .js { color: var(--teal); }             /* string */
+    .json-pretty .jn { color: var(--orange); }           /* number */
+    .json-pretty .jb { color: var(--purple); }           /* bool */
+    .json-pretty .jl { color: var(--t-muted); font-style: italic; } /* null */
+    .json-pretty .jp { color: var(--t-muted); }          /* punctuation */
+
+  </style>
+
+  <style>
+    /* ===== Professional theme: flat, compact, neutral ===== */
+    :root { --radius: 8px; --radius-sm: 6px; --shadow-soft: none; --shadow-float: 0 8px 24px rgba(0,0,0,.18); --shadow-card: none; --shadow-sm: none; }
+    :root[data-theme=light] {
+      --bg-body: #ffffff; --bg-card: #ffffff; --bg-sidebar: #f6f8fa; --bg-muted: #f6f8fa; --bg-hover: #eaeef2;
+      --border: #d0d7de; --border-soft: #e4e8ec; --t-base: #1f2328; --t-muted: #59636e; --t-light: #818b98;
+      --primary: #1f6feb; --primary-light: #4c8dff; --primary-dark: #1a5fd0; --primary-soft: #ddf4ff; --primary-ring: rgba(31,111,235,.3);
+      --success: #1a7f37; --warning: #9a6700; --danger: #cf222e; --info: #0969da; --purple: #8250df; --teal: #1b7c83; --orange: #bc4c00;
+      --success-soft: #dafbe1; --warning-soft: #fff8c5; --danger-soft: #ffebe9; --info-soft: #ddf4ff;
+    }
+    :root[data-theme=dark] {
+      --bg-body: #0d1117; --bg-card: #0d1117; --bg-sidebar: #010409; --bg-muted: #161b22; --bg-hover: #1c2128;
+      --border: #30363d; --border-soft: #21262d; --t-base: #e6edf3; --t-muted: #9198a1; --t-light: #6e7681;
+      --primary: #4493f8; --primary-light: #79b8ff; --primary-dark: #388bfd; --primary-soft: rgba(56,139,253,.15); --primary-ring: rgba(68,147,248,.4);
+      --success: #3fb950; --warning: #d29922; --danger: #f85149; --info: #4493f8; --purple: #ab7df8; --teal: #39c5cf; --orange: #db6d28;
+      --success-soft: rgba(46,160,67,.15); --warning-soft: rgba(187,128,9,.15); --danger-soft: rgba(248,81,73,.12); --info-soft: rgba(56,139,253,.12);
+    }
+    body { font-size: 13.5px; letter-spacing: 0.01em; line-height: 1.55; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    .eyebrow { letter-spacing: .08em; }
+
+    /* Layout chrome */
+    .app { grid-template-columns: 264px 1fr; }
+    .sidebar { background: var(--bg-sidebar); border-right: 1px solid var(--border); box-shadow: none; }
+    .sidebar-head { padding: 12px 14px; }
+    .sidebar-brand { font-size: 14px; font-weight: 600; letter-spacing: -.01em; }
+    .sidebar-item { border-radius: 6px; padding: 5px 8px; margin-bottom: 1px; }
+    .sidebar-item.is-active { background: var(--bg-hover); color: var(--t-base); box-shadow: inset 2px 0 0 var(--primary); }
+    .sidebar-folder { border-radius: 6px; }
+    .topbar { background: var(--bg-card); backdrop-filter: none; border-bottom: 1px solid var(--border); padding: 8px 14px; min-height: 48px; }
+    .request-bar { padding: 12px 16px 10px; gap: 6px; background: transparent; }
+    .req-tabs-wrap { padding: 0 16px; }
+    .req-panel { padding: 14px 16px; }
+    .response-head { padding: 8px 16px; background: var(--bg-muted); }
+    .response-body { padding: 10px 16px; }
+    .response-area { background: var(--bg-card); box-shadow: none; border-radius: 0; border-top: 1px solid var(--border); }
+    .card, .req-body { border-radius: var(--radius); box-shadow: none; }
+
+    /* Controls */
+    .btn { border-radius: 6px; font-weight: 500; letter-spacing: 0; padding: 6px 12px; transition: background .12s, border-color .12s; }
+    .btn:hover { transform: none; }
+    .btn--sm { padding: 4px 9px; font-size: 12px; }
+    .btn--ghost { background: var(--bg-muted); border-color: var(--border); }
+    .btn--ghost:hover { background: var(--bg-hover); border-color: var(--t-light); box-shadow: none; }
+    .btn--primary { background: var(--primary); border-color: rgba(0,0,0,.08); color: #fff; box-shadow: none; }
+    .btn--primary:hover { background: var(--primary-dark); transform: none; box-shadow: none; }
+    .btn--danger { background: transparent; }
+    .input, .select, .textarea, .CodeMirror { border-radius: 6px !important; border-color: var(--border) !important; background: var(--bg-card); }
+    .input, .select { padding: 6px 10px; }
+    .input:focus, .select:focus, .textarea:focus { border-color: var(--primary) !important; box-shadow: 0 0 0 3px var(--primary-ring) !important; }
+    .request-bar .method-select, .request-bar .url-input, .request-bar .send-btn { height: 34px; }
+    .request-bar .method-select { font-weight: 600; font-family: "JetBrains Mono", monospace; font-size: 12px; }
+    .icon-btn { border-radius: 6px; }
+
+    /* Tabs: underline, no pills */
+    .tabs { border-bottom: 1px solid var(--border); gap: 2px; }
+    .tab { border-radius: 0; padding: 8px 12px; font-size: 13px; font-weight: 500; color: var(--t-muted); background: none; }
+    .tab.is-active { background: none; color: var(--t-base); border-bottom: 2px solid var(--primary); font-weight: 600; }
+    .tabs.pills { background: var(--bg-muted); border: 1px solid var(--border); border-radius: 6px; padding: 2px; }
+    .tabs.pills .tab { border: 0; border-radius: 4px; padding: 4px 10px; font-size: 12px; }
+    .tabs.pills .tab.is-active { background: var(--bg-card); box-shadow: 0 0 0 1px var(--border); border-bottom: 0; }
+
+    /* Data */
+    .kv-table th { background: var(--bg-muted); font-weight: 600; border-top: 1px solid var(--border); }
+    .kv-table td { border-bottom: 1px solid var(--border-soft); }
+    .badge { border-radius: 4px; padding: 2px 7px; font-weight: 500; }
+    .status-code { border-radius: 4px; padding: 1px 8px; font-weight: 600; }
+    .split-resizer { background: var(--border-soft); height: 6px; flex-basis: 6px; }
+    .split-resizer:hover, .split-resizer.is-dragging { background: var(--primary); }
+    .cd-theme-toggle { border-radius: 6px; padding: 4px 10px; }
+    .alert { border-radius: 6px; }
+
+    /* In-page confirm dialog */
+    .ui-confirm { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; background: rgba(1,4,9,.5); }
+    .ui-confirm-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; width: min(380px, 90vw); box-shadow: var(--shadow-float); }
+    .ui-confirm-box p { margin: 0 0 14px; font-size: 13px; }
+    .ui-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .btn:focus-visible, .tab:focus-visible, .icon-btn:focus-visible, .sidebar-item:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+
+    /* Inside VS Code: keep the editor font, but the Light/Dark switch controls the colours
+       (the default follows the editor theme on first run, see initTheme). */
+    body.is-vscode { font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 13.5px; -webkit-font-smoothing: antialiased; }
+    .vscode-badge { margin-left: 4px; border-radius: 4px; }
+  </style>
+  <style>
+    .tabstrip { display: flex; align-items: stretch; background: var(--bg-muted); border-bottom: 1px solid var(--border); flex-shrink: 0; min-height: 36px; }
+    .tabstrip-list { display: flex; overflow-x: auto; min-width: 0; scrollbar-width: none; -ms-overflow-style: none; }
+    .tabstrip-list::-webkit-scrollbar { display: none; height: 0; }
+    .rtab { display: flex; align-items: center; gap: 7px; padding: 0 6px 0 12px; min-width: 120px; max-width: 340px; border-right: 1px solid var(--border); color: var(--t-muted); font-size: 12.5px; cursor: pointer; user-select: none; white-space: nowrap; }
+    .rtab:hover { background: var(--bg-hover); color: var(--t-base); }
+    .rtab.is-active { background: var(--bg-card); color: var(--t-base); box-shadow: inset 0 2px 0 var(--primary); }
+    .rtab .m { font: 700 9.5px "JetBrains Mono", monospace; }
+    .rtab .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .rtab .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warning); flex-shrink: 0; }
+    .rtab .x { width: 18px; height: 18px; border-radius: 4px; display: grid; place-items: center; font-size: 15px; line-height: 1; opacity: 0; }
+    .rtab:hover .x, .rtab.is-active .x { opacity: .75; }
+    .rtab .x:hover { opacity: 1; background: var(--bg-hover); }
+    .tab-menu { position: fixed; z-index: 3000; min-width: 190px; padding: 4px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+    .tab-menu button { display: block; width: 100%; text-align: left; padding: 7px 10px; border: 0; background: transparent; color: var(--t-base); font: inherit; font-size: 12.5px; border-radius: 5px; cursor: pointer; }
+    .tab-menu button:hover:not(:disabled) { background: var(--bg-hover); }
+    .tab-menu button:disabled { opacity: .4; cursor: default; }
+    .tab-menu hr { border: 0; border-top: 1px solid var(--border); margin: 4px 0; }
+    #env-badge { max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
+    #env-badge.clickable { cursor: pointer; }
+    #btn-new-tab { align-self: center; margin: 0 6px; flex-shrink: 0; }
+    .btn:disabled { opacity: .65; cursor: progress; }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <div class="sidebar-brand">API <span class="accent">Workbench</span></div>
+        <button class="icon-btn" id="btn-close-sidebar" title="Close" style="display:none" onclick="toggleSidebar(false)">
+          <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="sidebar-search">
+        <svg class="ss-icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        <input type="text" class="input" id="api-search" placeholder="Search APIs (name, URL, method)" autocomplete="off" spellcheck="false" aria-label="Search APIs" oninput="onApiSearch(this.value)" onkeydown="if(event.key==='Escape'){clearApiSearch();}"/>
+        <button type="button" class="icon-btn ss-clear" id="api-search-clear" title="Clear search" aria-label="Clear search" style="display:none" onclick="clearApiSearch()"><svg viewBox="0 0 24 24" width="12" height="12"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+      </div>
+
+      <div class="sidebar-section">
+        <span class="eyebrow">Collections</span>
+        <button class="icon-btn" title="New collection" onclick="openNewCollectionModal()">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+      <div class="sidebar-list" id="collections-list"></div>
+
+      <div class="sidebar-section" style="border-top:1px solid var(--border-soft); margin-top:8px; padding-top:12px;">
+        <span class="eyebrow">Environments</span>
+        <div style="display:inline-flex; gap:2px;">
+          <button class="icon-btn" title="Manage environments" onclick="openEnvModal()">
+            <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V19a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H5a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H10a1.7 1.7 0 0 0 1-1.5V5a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V10c.1.7.7 1.2 1.5 1.2H19a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1.3Z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+          </button>
+          <button class="icon-btn" title="Add environment" onclick="createNewEnv()">
+            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="sidebar-list" id="environments-list" style="flex:0 0 auto; max-height:160px;"></div>
+
+      <div class="sidebar-footer">
+        <button class="btn btn--ghost btn--sm" style="width:100%; justify-content:center;" onclick="loadSampleApi()" title="Adds a sample collection with AES-encrypted request and response scripts">
+          Load sample API
+        </button>
+        <button class="btn btn--ghost btn--sm" style="width:100%; justify-content:center;" onclick="openImportModal()">
+          Import
+        </button>
+        <button class="btn btn--ghost btn--sm" style="width:100%; justify-content:center;" onclick="openExportModal()">
+          Export
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <button class="icon-btn" id="btn-open-sidebar" title="Collections" onclick="toggleSidebar(true)" style="display:none">
+            <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <select class="select" id="active-env" style="width:180px;" onchange="setActiveEnv(this.value)">
+            <option value="">No environment</option>
+          </select>
+          <span class="badge success dot" id="env-badge" title="Where your data is stored">Loading data file…</span>
+        </div>
+        <div class="topbar-right">
+          <button class="btn btn--ghost btn--sm" onclick="openHistoryModal()">History</button>
+          <button class="btn btn--ghost btn--sm" onclick="openSavedResponsesModal()">Saved responses</button>
+          <label class="cd-theme-toggle" id="theme-toggle">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+            <span class="switch"><input type="checkbox" id="theme-switch"/><span class="track"></span></span>
+            <svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+          </label>
+        </div>
+      </div>
+
+      <div class="tabstrip" role="tablist" aria-label="Open requests">
+        <div class="tabstrip-list" id="tabstrip-list"></div>
+        <button type="button" class="icon-btn" id="btn-new-tab" title="New request" aria-label="New request" onclick="newTab()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button type="button" class="icon-btn" id="btn-tab-menu" title="Tab actions" aria-label="Tab actions" aria-haspopup="menu" onclick="openTabMenuFromButton(this)"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6" style="fill:currentColor;stroke:none"/><circle cx="12" cy="12" r="1.6" style="fill:currentColor;stroke:none"/><circle cx="19" cy="12" r="1.6" style="fill:currentColor;stroke:none"/></svg></button>
+      </div>
+      <input type="hidden" id="req-name"/>
+      <div class="request-bar">
+        <select class="select method-select" id="req-method">
+          <option value="GET">GET</option>
+          <option value="POST">POST</option>
+          <option value="PUT">PUT</option>
+          <option value="PATCH">PATCH</option>
+          <option value="DELETE">DELETE</option>
+          <option value="HEAD">HEAD</option>
+          <option value="OPTIONS">OPTIONS</option>
+        </select>
+        <input class="input url-input" id="req-url" type="text" placeholder="https://api.example.com/{{path}} or {{baseUrl}}/users" spellcheck="false"/>
+        <button class="btn btn--primary send-btn" id="btn-send" onclick="sendRequest()">Send</button>
+        <button class="btn btn--ghost" title="Save request" onclick="saveCurrentRequest()">Save</button>
+      </div>
+      <div class="req-tabs-wrap">
+        <div class="tabs" id="req-tabs">
+          <span class="tab is-active" data-panel="params">Params</span>
+          <span class="tab" data-panel="headers">Headers</span>
+          <span class="tab" data-panel="body">Body</span>
+          <span class="tab" data-panel="prerequest">Pre-request</span>
+          <span class="tab" data-panel="tests">Post-response</span>
+        </div>
+      </div>
+
+      <div class="split-view" id="split-view">
+        <div class="req-body" id="req-body-pane">
+          <div class="req-panel is-active" id="panel-params">
+            <table class="kv-table" id="params-table">
+              <thead><tr><th class="kv-check"></th><th class="kv-key">Key</th><th class="kv-value">Value</th><th class="kv-del"></th></tr></thead>
+              <tbody></tbody>
+            </table>
+            <button class="btn btn--ghost btn--sm" style="margin-top:10px;" onclick="addKvRow('params')">+ Add param</button>
+          </div>
+
+          <div class="req-panel" id="panel-headers">
+            <div class="header-presets">
+              <button type="button" class="btn btn--ghost btn--sm" onclick="addHeaderPreset('Content-Type','application/json')">Content-Type: json</button>
+              <button type="button" class="btn btn--ghost btn--sm" onclick="addHeaderPreset('Content-Type','application/x-www-form-urlencoded')">Content-Type: form</button>
+              <button type="button" class="btn btn--ghost btn--sm" onclick="addHeaderPreset('Accept','application/json')">Accept: json</button>
+              <button type="button" class="btn btn--ghost btn--sm" onclick="addHeaderPreset('Authorization','Bearer {{token}}')">Authorization</button>
+              <button type="button" class="btn btn--ghost btn--sm" onclick="addHeaderPreset('X-Requested-With','XMLHttpRequest')">X-Requested-With</button>
+              <button type="button" class="btn btn--ghost btn--sm" onclick="addHeaderPreset('Cache-Control','no-cache')">Cache-Control</button>
+            </div>
+            <table class="kv-table" id="headers-table">
+              <thead><tr><th class="kv-check"></th><th class="kv-key">Key</th><th class="kv-value">Value</th><th class="kv-del"></th></tr></thead>
+              <tbody></tbody>
+            </table>
+            <button class="btn btn--ghost btn--sm" style="margin-top:10px;" onclick="addKvRow('headers')">+ Add header</button>
+          </div>
+
+          <div class="req-panel" id="panel-body">
+            <div class="body-type-row">
+              <div class="tabs pills" id="body-type-tabs">
+                <span class="tab is-active" data-body="none">None</span>
+                <span class="tab" data-body="form-data">form-data</span>
+                <span class="tab" data-body="urlencoded">x-www-form-urlencoded</span>
+                <span class="tab" data-body="raw">raw</span>
+                <span class="tab" data-body="binary">binary</span>
+                <span class="tab" data-body="graphql">GraphQL</span>
+              </div>
+              <select class="select" id="raw-lang" style="width:120px; display:none;">
+                <option value="json">JSON</option>
+                <option value="text">Text</option>
+                <option value="xml">XML</option>
+                <option value="html">HTML</option>
+                <option value="javascript">JavaScript</option>
+              </select>
+            </div>
+            <div id="body-none" class="body-panel">
+              <p class="field-help">This request does not have a body.</p>
+            </div>
+            <div id="body-form-data" class="body-panel" style="display:none;">
+              <table class="kv-table" id="formdata-table">
+                <thead><tr><th class="kv-check"></th><th class="kv-key">Key</th><th>Type</th><th class="kv-value">Value</th><th class="kv-del"></th></tr></thead>
+                <tbody></tbody>
+              </table>
+              <button class="btn btn--ghost btn--sm" style="margin-top:10px;" onclick="addFormDataRow()">+ Add field</button>
+            </div>
+            <div id="body-urlencoded" class="body-panel" style="display:none;">
+              <table class="kv-table" id="urlencoded-table">
+                <thead><tr><th class="kv-check"></th><th class="kv-key">Key</th><th class="kv-value">Value</th><th class="kv-del"></th></tr></thead>
+                <tbody></tbody>
+              </table>
+              <button class="btn btn--ghost btn--sm" style="margin-top:10px;" onclick="addKvRow('urlencoded')">+ Add field</button>
+            </div>
+            <div id="body-raw" class="body-panel" style="display:none;">
+              <textarea class="textarea mono" id="raw-body" placeholder='{"key": "value"}' style="min-height:220px; font-family:JetBrains Mono,monospace;"></textarea>
+            </div>
+            <div id="body-binary" class="body-panel" style="display:none;">
+              <input type="file" id="binary-file" class="input" style="padding:8px;"/>
+              <p class="field-help" id="binary-meta" style="margin-top:8px;"></p>
+            </div>
+            <div id="body-graphql" class="body-panel" style="display:none;">
+              <div class="field" style="margin-bottom:12px;">
+                <label class="field-label">Query</label>
+                <textarea class="textarea mono" id="gql-query" placeholder="query { user(id: 1) { name } }" style="min-height:140px;"></textarea>
+              </div>
+              <div class="field">
+                <label class="field-label">Variables (JSON)</label>
+                <textarea class="textarea mono" id="gql-vars" placeholder='{"id": 1}' style="min-height:80px;"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="req-panel" id="panel-prerequest">
+            <p class="field-help" style="margin-bottom:8px;">Runs before send. Write your own encrypt logic; set <code>pm.request.body</code>. <code>CryptoJS</code> is available.</p>
+            <textarea class="textarea mono" id="prerequest-script" placeholder="// pm.environment.set('token', 'abc');&#10;console.log('pre-request');" style="min-height:200px; font-family:JetBrains Mono,monospace;"></textarea>
+            <div style="margin-top:10px;">
+              <span class="eyebrow">Console</span>
+              <div class="console-box" id="prerequest-console"><div class="sc-empty">Script output appears here…</div></div>
+            </div>
+          </div>
+
+          <div class="req-panel" id="panel-tests">
+            <p class="field-help" style="margin-bottom:8px;">Runs after response. Write your own decrypt logic with <code>CryptoJS</code>; use <code>pm.response.text()</code> / <code>pm.response.json()</code> and <code>console.log</code>.</p>
+            <textarea class="textarea mono" id="tests-script" placeholder="// pm.test(&quot;Status is 200&quot;, function () {&#10;//   pm.expect(pm.response.code).to.eql(200);&#10;// });&#10;// console.log(pm.response.json());" style="min-height:200px; font-family:JetBrains Mono,monospace;"></textarea>
+            <div style="margin-top:10px;">
+              <span class="eyebrow">Console &amp; test results</span>
+              <div class="console-box" id="tests-console"><div class="sc-empty">Post-response output appears here…</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="split-resizer" id="split-resizer" title="Drag to resize"></div>
+        <div class="response-area" id="response-area">
+          <div class="response-head" id="response-head">
+            <div class="response-meta">
+              <span class="eyebrow">Response</span>
+              <span class="status-code" id="res-status">—</span>
+              <span class="badge" id="res-time">—</span>
+              <span class="badge" id="res-size">—</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <div class="tabs pills" id="res-view-tabs">
+                <span class="tab is-active" data-resview="pretty">Pretty</span>
+                <span class="tab" data-resview="raw">Raw</span>
+                <span class="tab" data-resview="tree">Tree</span>
+                <span class="tab" data-resview="headers">Headers</span>
+              </div>
+              <select class="select" id="res-format" style="width:100px;">
+                <option value="auto">Auto</option>
+                <option value="json">JSON</option>
+                <option value="xml">XML</option>
+                <option value="html">HTML</option>
+                <option value="text">Text</option>
+              </select>
+              <button class="icon-btn" id="btn-res-float" onclick="toggleResponseFloat()" title="Detach / move response window">
+                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M8 8h8v8H8zM4 4h6M4 4v6M4 4l6 6M20 20h-6M20 20v-6M20 20l-6-6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+              </button>
+              <button class="icon-btn" id="btn-res-fs" onclick="toggleResponseFullscreen()" title="Fullscreen response">
+                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+              </button>
+              <button class="btn btn--ghost btn--sm" onclick="storeCurrentResponse()" title="Store this response">Store</button>
+              <button class="btn btn--ghost btn--sm" onclick="copyResponse()">Copy</button>
+            </div>
+          </div>
+          <div class="response-body">
+            <textarea id="res-pretty" class="mono" readonly placeholder="Send a request to see the response…" style="display:none;"></textarea>
+            <pre id="res-pretty-hl" class="json-pretty" style="display:block;"></pre>
+            <textarea id="res-raw" class="mono" readonly style="display:none;"></textarea>
+            <div id="res-tree" class="jt-tree" style="display:none;"><div class="jt-tree-empty">Send a request to see the tree view.</div></div>
+            <div id="res-headers" style="display:none;">
+              <table class="kv-table" id="res-headers-table">
+                <thead><tr><th>Header</th><th>Value</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <div class="modal-overlay" id="modal-collection">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 class="modal-title" id="collection-modal-title">New collection</h2>
+        <button class="icon-btn" onclick="closeModal('modal-collection')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="field" style="margin-bottom:14px;">
+        <label class="field-label">Name</label>
+        <input class="input" id="collection-name" placeholder="My API"/>
+      </div>
+      <div class="field">
+        <label class="field-label">Description (optional)</label>
+        <textarea class="textarea" id="collection-desc" rows="2"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn--ghost" onclick="closeModal('modal-collection')">Cancel</button>
+        <button class="btn btn--primary" onclick="saveCollection()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-request">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 class="modal-title">Save request</h2>
+        <button class="icon-btn" onclick="closeModal('modal-request')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="field" style="margin-bottom:14px;">
+        <label class="field-label">Name</label>
+        <input class="input" id="request-name" placeholder="Get users"/>
+      </div>
+      <div class="field">
+        <label class="field-label">Collection</label>
+        <select class="select" id="request-collection"></select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn--ghost" onclick="closeModal('modal-request')">Cancel</button>
+        <button class="btn btn--primary" onclick="confirmSaveRequest()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-env">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2 class="modal-title">Environments</h2>
+        <button class="icon-btn" onclick="closeModal('modal-env')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div style="display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+        <select class="select" id="env-select" style="flex:1; min-width:160px;" onchange="loadEnvEditor(this.value)"></select>
+        <button class="btn btn--ghost btn--sm" onclick="createNewEnv()">+ New</button>
+        <button class="btn btn--danger btn--sm" onclick="deleteCurrentEnv()">Delete</button>
+      </div>
+      <div class="field" style="margin-bottom:12px;">
+        <label class="field-label">Environment name</label>
+        <input class="input" id="env-name"/>
+      </div>
+      <table class="kv-table" id="env-vars-table">
+        <thead><tr><th class="kv-check">Enabled</th><th>Variable</th><th>Initial value</th><th>Current value</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <button class="btn btn--ghost btn--sm" style="margin-top:10px;" onclick="addEnvVarRow()">+ Add variable</button>
+      <div class="modal-actions">
+        <button class="btn btn--ghost" onclick="closeModal('modal-env')">Close</button>
+        <button class="btn btn--primary" onclick="saveEnvFromEditor()">Save environment</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-import">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 class="modal-title">Import</h2>
+        <button class="icon-btn" onclick="closeModal('modal-import')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <p class="field-help" style="margin-bottom:12px;">Import a Postman Collection v2.1 or Environment JSON file (or CipherDeck export).</p>
+      <input type="file" id="import-file" accept=".json,application/json" class="input" style="padding:8px;"/>
+      <div class="modal-actions">
+        <button class="btn btn--ghost" onclick="closeModal('modal-import')">Cancel</button>
+        <button class="btn btn--primary" onclick="doImport()">Import</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-export">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 class="modal-title">Export</h2>
+        <button class="icon-btn" onclick="closeModal('modal-export')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="field" style="margin-bottom:14px;">
+        <label class="field-label">What to export</label>
+        <select class="select" id="export-type">
+          <option value="collection">Collection (Postman v2.1)</option>
+          <option value="environment">Environment (Postman)</option>
+          <option value="all">All data (CipherDeck backup)</option>
+        </select>
+      </div>
+      <div class="field" id="export-collection-wrap">
+        <label class="field-label">Collection</label>
+        <select class="select" id="export-collection"></select>
+      </div>
+      <div class="field" id="export-env-wrap" style="display:none;">
+        <label class="field-label">Environment</label>
+        <select class="select" id="export-env"></select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn--ghost" onclick="closeModal('modal-export')">Cancel</button>
+        <button class="btn btn--primary" onclick="doExport()">Download</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal-overlay" id="modal-store">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 class="modal-title">Store response</h2>
+        <button class="icon-btn" onclick="closeModal('modal-store')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="field">
+        <label class="field-label">Name</label>
+        <input class="input" id="store-name" placeholder="My saved response"/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn--ghost" onclick="closeModal('modal-store')">Cancel</button>
+        <button class="btn btn--primary" onclick="confirmStoreResponse()">Store</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-rename">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 class="modal-title" id="rename-modal-title">Rename</h2>
+        <button class="icon-btn" onclick="closeModal('modal-rename')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="field">
+        <label class="field-label">Name</label>
+        <input class="input" id="rename-input" placeholder="Name"/>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn--ghost" onclick="closeModal('modal-rename')">Cancel</button>
+        <button class="btn btn--primary" onclick="confirmRename()">Save</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="modal-history">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 class="modal-title">Request history</h2>
+        <button class="icon-btn" onclick="closeModal('modal-history')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div id="history-list" class="saved-responses"></div>
+      <div class="modal-actions">
+        <button class="btn btn--ghost" onclick="clearHistory()">Clear history</button>
+        <button class="btn btn--primary" onclick="closeModal('modal-history')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-saved">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2 class="modal-title">Saved responses</h2>
+        <button class="icon-btn" onclick="closeModal('modal-saved')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <input class="input" id="saved-search" type="search" placeholder="Search by name, URL, method, status or response body…" autocomplete="off" oninput="renderSavedResponses()" style="flex:1;"/>
+        <span id="saved-count" class="field-help" style="white-space:nowrap;margin:0;"></span>
+      </div>
+      <div id="saved-list" class="saved-responses"></div>
+      <div class="modal-actions">
+        <button class="btn btn--primary" onclick="closeModal('modal-saved')">Close</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal-overlay" id="modal-storage">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 class="modal-title">Data storage</h2>
+        <button class="icon-btn" onclick="closeModal('modal-storage')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="alert success" style="grid-template-columns:1fr; margin-bottom:14px;">
+        <div class="body"><div class="title">All the data is kept locally in your PC.</div>
+        Collections, environments, history and saved responses never leave this machine.</div>
+      </div>
+      <div class="field" style="margin-bottom:12px;">
+        <label class="field-label">Current data file</label>
+        <div class="mono" id="storage-path" style="padding:8px 10px; border:1px solid var(--border); border-radius:6px; background:var(--bg-muted); font-size:12px; word-break:break-all; user-select:text;"></div>
+      </div>
+      <div id="storage-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn--ghost btn--sm" onclick="revealStorage()">Reveal in file explorer</button>
+        <button class="btn btn--primary btn--sm" onclick="changeStorage(false)">Change folder&hellip;</button>
+        <button class="btn btn--ghost btn--sm" onclick="changeStorage(true)">Use default location</button>
+      </div>
+      <p class="field-help" id="storage-help" style="margin-top:12px;">Your current data is copied to the new folder as <code>workbench-data.json</code>. If that folder already contains one, it is loaded instead and nothing is overwritten.</p>
+      <div class="modal-actions">
+        <button class="btn btn--primary" onclick="closeModal('modal-storage')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  /* =========================================================================
+     State & persistence
+     ========================================================================= */
+  const STORAGE_KEY = 'cipherdeck-api-workbench-v1';
+
+
+  /* ---- Tauri desktop bridge (no CORS; HTTP runs in Rust) ---- */
+  // Detect Tauri in both dev and production (injection timing can differ)
+  function detectTauri() {
+    try {
+      if (typeof window === 'undefined') return false;
+      if (window.__TAURI__) return true;
+      if (window.__TAURI_IPC__) return true;
+      if (navigator.userAgent && navigator.userAgent.includes('Tauri')) return true;
+    } catch (e) {}
+    return false;
+  }
+  let IS_TAURI = detectTauri();
+  const IS_VSCODE = false;
+  let IS_DESKTOP = IS_TAURI;
+
+  if (IS_TAURI) {
+    try { document.body.classList.add('is-vscode'); } catch (e) {}
+  }
+
+  function getInvoke() {
+    const api = window.__TAURI__;
+    if (!api) return null;
+    if (api.tauri && typeof api.tauri.invoke === 'function') return api.tauri.invoke.bind(api.tauri);
+    if (api.core && typeof api.core.invoke === 'function') return api.core.invoke.bind(api.core);
+    if (typeof api.invoke === 'function') return api.invoke.bind(api);
+    return null;
+  }
+
+  function waitForTauri(maxMs) {
+    maxMs = maxMs == null ? 4000 : maxMs;
+    return new Promise((resolve) => {
+      if (getInvoke()) { IS_TAURI = true; IS_DESKTOP = true; resolve(true); return; }
+      const t0 = Date.now();
+      const timer = setInterval(() => {
+        if (getInvoke()) {
+          clearInterval(timer);
+          IS_TAURI = true; IS_DESKTOP = true;
+          try { document.body.classList.add('is-vscode'); } catch (e) {}
+          resolve(true);
+        } else if (Date.now() - t0 > maxMs) {
+          clearInterval(timer);
+          resolve(false);
+        }
+      }, 40);
+    });
+  }
+
+  function tauriInvoke(cmd, args) {
+    return waitForTauri(4000).then((ok) => {
+      const inv = getInvoke();
+      if (!inv) return Promise.reject(new Error('Tauri API not available (production bridge)'));
+      return inv(cmd, args || {});
+    });
+  }
+
+  function extensionFetch(payload) {
+    return tauriInvoke('http_request', {
+      payload: {
+        method: payload.method,
+        url: payload.url,
+        headers: payload.headers || {},
+        body: payload.body,
+        bodyBase64: payload.bodyBase64,
+        multipart: payload.multipart,
+        timeoutMs: payload.timeoutMs || 60000,
+        allowInsecureTls: !!(window.__ALLOW_INSECURE_TLS__)
+      }
+    });
+  }
+
+  function hostCall(type, extra, timeoutMs) {
+    if (type === 'stateLoad') {
+      return tauriInvoke('state_load').then(r => ({ ok: true, data: r.data, warning: r.warning, file: r.file }));
+    }
+    if (type === 'stateSave') {
+      return tauriInvoke('state_save', { data: extra && extra.data }).then(r => ({ ok: true, file: r.file }));
+    }
+    if (type === 'revealDataFile') {
+      return tauriInvoke('reveal_data_file').then(() => ({ ok: true }));
+    }
+    if (type === 'storageSet') {
+      return tauriInvoke('storage_set', {
+        args: {
+          reset: !!(extra && extra.reset),
+          data: extra && extra.data,
+          path: extra && extra.path
+        }
+      }).then(r => ({ ok: true, file: r.file, existed: r.existed, cancelled: r.cancelled }));
+    }
+    return Promise.reject(new Error('Unknown host call: ' + type));
+  }
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result).split(',')[1] || '');
+      r.onerror = () => reject(r.error || new Error('Could not read file ' + file.name));
+      r.readAsDataURL(file);
+    });
+  }
+
+  /* ---- In-page dialogs (alert/confirm/prompt are blocked in VS Code webviews) ---- */
+  function notify(msg) { showToast(String(msg), /fail|unrecogn|choose/i.test(msg) ? 'danger' : 'success'); }
+  function uiConfirm(message, label) {
+    return new Promise(resolve => {
+      const ov = document.createElement('div');
+      ov.className = 'ui-confirm';
+      ov.innerHTML = '<div class="ui-confirm-box" role="alertdialog"><p></p><div class="ui-confirm-actions">' +
+        '<button type="button" class="btn btn--ghost btn--sm" data-r="0">Cancel</button>' +
+        '<button type="button" class="btn btn--danger btn--sm" data-r="1">' + (label || 'Delete') + '</button></div></div>';
+      ov.querySelector('p').textContent = message;
+      const done = (v) => { document.removeEventListener('keydown', onKey, true); ov.remove(); resolve(v); };
+      const onKey = (e) => { if (e.key === 'Escape') done(false); };
+      ov.addEventListener('click', (e) => { const r = e.target.dataset && e.target.dataset.r; if (r != null) done(r === '1'); else if (e.target === ov) done(false); });
+      document.addEventListener('keydown', onKey, true);
+      document.body.appendChild(ov);
+      ov.querySelector('[data-r="0"]').focus();
+    });
+  }
+
+  let state = {
+    collections: [],
+    environments: [],
+    activeEnvId: null,
+    activeCollectionId: null,
+    activeRequestId: null,
+    collapsedCollections: {},
+    history: [],
+    savedResponses: [],
+    currentRequest: null
+  };
+
+  function uid() {
+    return 'id_' + Math.random().toString(36).slice(2, 11) + Date.now().toString(36);
+  }
+
+  let _stateLoaded = false;
+
+  let currentDataFile = null;
+  function setStorageBadge(file) {
+    const b = document.getElementById('env-badge');
+    if (!b) return;
+    currentDataFile = file || null;
+    if (IS_DESKTOP && file) {
+      b.textContent = file.length > 52 ? '\u2026' + file.slice(-51) : file;
+      b.title = file + '\n(click to view or change the storage location)';
+    } else if (!IS_DESKTOP) {
+      b.textContent = IS_TAURI ? 'Local data file' : 'Browser localStorage';
+      b.title = 'Click for details';
+    }
+    b.classList.add('clickable');
+    b.onclick = openStorageModal;
+  }
+
+  // In VS Code the state lives in a JSON file owned by the extension host (no
+  // localStorage quota). In a plain browser it falls back to localStorage.
+  async function loadState() {
+    let parsed = null;
+    let canSave = true;
+    try {
+      // Production builds may inject __TAURI__ slightly after the script runs
+      await waitForTauri(4000);
+      IS_DESKTOP = IS_TAURI = detectTauri() || !!getInvoke();
+      if (IS_DESKTOP) {
+        const r = await hostCall('stateLoad', {});
+        parsed = r.data || null;
+        setStorageBadge(r.file);
+        if (r.warning) showToast(r.warning, 'danger');
+        if (!parsed) {
+          // One-time migration of data previously kept in localStorage
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) parsed = JSON.parse(raw);
+        }
+      } else {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) parsed = JSON.parse(raw);
+      }
+    } catch (e) {
+      console.warn('Failed to load state', e);
+      // Do not overwrite the data file if we could not read it
+      if (IS_DESKTOP) { canSave = false; showToast('Could not read data file: ' + (e.message || e), 'danger'); }
+    }
+    if (parsed) state = { ...state, ...parsed };
+    if (!state.collections.length) {
+      const colId = uid();
+      state.collections = [{
+        id: colId,
+        name: 'My Collection',
+        description: '',
+        requests: [{
+          id: uid(),
+          name: 'Example GET',
+          method: 'GET',
+          url: 'https://httpbin.org/get',
+          params: [],
+          headers: [{ key: 'Accept', value: 'application/json', enabled: true }],
+          bodyType: 'none',
+          body: {},
+          preRequest: '',
+          tests: 'pm.test("Status code is 200", function () {\n  pm.expect(pm.response.code).to.eql(200);\n});'
+        }]
+      }];
+      state.activeCollectionId = colId;
+    }
+    if (!state.environments.length) {
+      const envId = uid();
+      state.environments = [{
+        id: envId,
+        name: 'Local',
+        values: [
+          { key: 'baseUrl', value: 'https://httpbin.org', enabled: true },
+          { key: 'token', value: '', enabled: true }
+        ]
+      }];
+      state.activeEnvId = envId;
+    }
+    if (state.theme) {
+      const sw = document.getElementById('theme-switch');
+      if (sw) sw.checked = state.theme === 'dark';
+      applyTheme(state.theme === 'dark');
+    }
+    if (!IS_DESKTOP) setStorageBadge();
+    _stateLoaded = canSave;
+    if (canSave && IS_DESKTOP && parsed) saveStateNow(); // persist migrated data to the file
+  }
+
+  function snapshotState() {
+    return {
+      collections: state.collections,
+      environments: state.environments,
+      activeEnvId: state.activeEnvId,
+      activeCollectionId: state.activeCollectionId,
+      openTabs: state.openTabs || [],
+      activeTabId: state.activeTabId || null,
+      collapsedCollections: state.collapsedCollections || {},
+      history: state.history.slice(0, 50),
+      savedResponses: state.savedResponses.slice(0, 30),
+      theme: state.theme || null
+    };
+  }
+
+  let _saveT = null;
+  let _saveChain = Promise.resolve();
+  function saveState() { clearTimeout(_saveT); _saveT = setTimeout(saveStateNow, 250); }
+  function saveStateNow() {
+    clearTimeout(_saveT);
+    if (!_stateLoaded) return;
+    const data = snapshotState();
+    if (IS_DESKTOP) {
+      _saveChain = _saveChain
+        .then(() => hostCall('stateSave', { data: data }, 30000))
+        .then(r => { if (r && r.file) setStorageBadge(r.file); })
+        .catch(e => { console.warn('Failed to save state', e); showToast('Save to data file failed: ' + (e.message || e), 'danger'); });
+    } else {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+      catch (e) { console.warn('Failed to save state', e); }
+    }
+  }
+
+  window.addEventListener('pagehide', saveStateNow);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) saveStateNow(); });
+
+  /* =========================================================================
+     Theme
+     ========================================================================= */
+  function applyTheme(isDark) {
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    state.theme = isDark ? 'dark' : 'light';
+    try { localStorage.setItem('cd-theme', state.theme); } catch (e) {}
+    if (_stateLoaded) saveState();
+    setTimeout(() => { if (typeof refreshCmEditors === 'function') refreshCmEditors(); }, 20);
+  }
+  (function initTheme() {
+    let saved = null;
+    try { saved = localStorage.getItem('cd-theme'); } catch (e) {}
+    const bc = document.body.classList;
+    const vsDark = bc.contains('vscode-dark') || (bc.contains('vscode-high-contrast') && !bc.contains('vscode-high-contrast-light'));
+    const vsKnown = bc.contains('vscode-dark') || bc.contains('vscode-light') || bc.contains('vscode-high-contrast');
+    const isDark = saved ? saved === 'dark'
+      : (vsKnown ? vsDark : window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.getElementById('theme-switch').checked = isDark;
+    applyTheme(isDark);
+    // Only listen to change — clicking the label already toggles the checkbox once
+    document.getElementById('theme-switch').addEventListener('change', (e) => applyTheme(e.target.checked));
+    // Make the whole pill clickable without double-toggling
+    document.getElementById('theme-toggle').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('theme-switch') || e.target.closest('input')) return;
+      // If click landed on svg / track, manually flip once
+      if (!e.target.closest('.switch')) {
+        const sw = document.getElementById('theme-switch');
+        sw.checked = !sw.checked;
+        applyTheme(sw.checked);
+      }
+    });
+  })();
+
+  /* =========================================================================
+     Sidebar & lists
+     ========================================================================= */
+  function toggleSidebar(open) {
+    const sb = document.getElementById('sidebar');
+    if (open) sb.classList.add('is-open');
+    else sb.classList.remove('is-open');
+  }
+
+  function isCollectionCollapsed(id) {
+    return !!(state.collapsedCollections && state.collapsedCollections[id]);
+  }
+  function toggleCollectionCollapse(id) {
+    if (!state.collapsedCollections) state.collapsedCollections = {};
+    state.collapsedCollections[id] = !state.collapsedCollections[id];
+    saveState();
+    renderCollections();
+  }
+
+  let apiSearch = '';
+  function onApiSearch(v) {
+    apiSearch = String(v || '');
+    const c = document.getElementById('api-search-clear');
+    if (c) c.style.display = apiSearch ? '' : 'none';
+    renderCollections();
+  }
+  function clearApiSearch() {
+    const i = document.getElementById('api-search');
+    if (i) { i.value = ''; i.focus(); }
+    onApiSearch('');
+  }
+  function renderCollections() {
+    pruneTabs();
+    const list = document.getElementById('collections-list');
+    list.innerHTML = '';
+    if (!state.collapsedCollections) state.collapsedCollections = {};
+    const terms = apiSearch.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const searching = terms.length > 0;
+    const matches = (text) => terms.every(t => text.indexOf(t) >= 0);
+    let shown = 0;
+    state.collections.forEach(col => {
+      // While searching: a collection whose own name matches shows all its requests;
+      // otherwise only requests whose method / name / URL match. Collapsed state is ignored.
+      const colMatch = searching && matches(String(col.name || '').toLowerCase());
+      const reqs = !searching ? (col.requests || []) : (col.requests || []).filter(r =>
+        colMatch || matches(((r.method || 'GET') + ' ' + (r.name || '') + ' ' + (r.url || '')).toLowerCase()));
+      if (searching && !reqs.length) return;
+      shown += reqs.length;
+      const collapsed = searching ? false : isCollectionCollapsed(col.id);
+      const folder = document.createElement('div');
+      folder.className = 'sidebar-folder' + (collapsed ? ' is-collapsed' : '');
+      folder.title = 'Click to expand/collapse';
+
+      const chevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      chevron.setAttribute('class', 'folder-chevron');
+      chevron.setAttribute('viewBox', '0 0 24 24');
+      chevron.innerHTML = '<path d="M6 9l6 6 6-6"/>';
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'folder-name';
+      nameSpan.textContent = col.name;
+
+      const actions = document.createElement('span');
+      actions.className = 'folder-actions';
+
+      const addBtn = document.createElement('button');
+      addBtn.className = 'icon-btn';
+      addBtn.title = 'Add request';
+      addBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+      addBtn.onclick = (e) => { e.stopPropagation(); newRequestInCollection(col.id); };
+
+      const renColBtn = document.createElement('button');
+      renColBtn.className = 'icon-btn';
+      renColBtn.title = 'Rename collection';
+      renColBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+      renColBtn.onclick = (e) => { e.stopPropagation(); openRename('collection', col.id, col.name); };
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'icon-btn';
+      delBtn.title = 'Delete collection';
+      delBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+      delBtn.onclick = async (e) => {
+        e.stopPropagation();
+        if (await uiConfirm('Delete collection "' + col.name + '"?')) {
+          state.collections = state.collections.filter(c => c.id !== col.id);
+          if (state.collapsedCollections) delete state.collapsedCollections[col.id];
+          saveState();
+          renderCollections();
+        }
+      };
+
+      actions.append(addBtn, renColBtn, delBtn);
+      folder.append(chevron, nameSpan, actions);
+      folder.onclick = (e) => {
+        if (e.target.closest('button')) return;
+        toggleCollectionCollapse(col.id);
+      };
+      list.appendChild(folder);
+
+      const group = document.createElement('div');
+      group.className = 'sidebar-req-group' + (collapsed ? ' is-collapsed' : '');
+
+      reqs.forEach(req => {
+        const item = document.createElement('div');
+        item.className = 'sidebar-item' + (state.activeRequestId === req.id ? ' is-active' : '');
+        item.title = (req.method || 'GET') + ' ' + (req.name || '') + '\n' + (req.url || '');
+        item.innerHTML = `<span class="method method-${(req.method||'get').toLowerCase()}">${esc(req.method||'GET')}</span><span class="name">${esc(req.name)}</span>`;
+        const itemAct = document.createElement('span');
+        itemAct.className = 'item-actions';
+        const renBtn = document.createElement('button');
+        renBtn.className = 'icon-btn';
+        renBtn.title = 'Rename';
+        renBtn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+        renBtn.onclick = (e) => { e.stopPropagation(); openRename('request', req.id, req.name, col.id); };
+        const d = document.createElement('button');
+        d.className = 'icon-btn';
+        d.title = 'Delete';
+        d.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+        d.onclick = async (e) => {
+          e.stopPropagation();
+          if (await uiConfirm('Delete request?')) {
+            col.requests = col.requests.filter(r => r.id !== req.id);
+            if (state.activeRequestId === req.id) state.activeRequestId = null;
+            saveState();
+            renderCollections();
+          }
+        };
+        const dupBtn = document.createElement('button');
+        dupBtn.className = 'icon-btn';
+        dupBtn.title = 'Duplicate';
+        dupBtn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+        dupBtn.onclick = (e) => { e.stopPropagation(); duplicateRequest(col.id, req.id); };
+        itemAct.appendChild(renBtn);
+        itemAct.appendChild(dupBtn);
+        itemAct.appendChild(d);
+        itemAct.style.width = '80px';
+        item.appendChild(itemAct);
+        item.onclick = () => loadRequest(col.id, req.id);
+        group.appendChild(item);
+      });
+      list.appendChild(group);
+    });
+    if (searching && !shown) {
+      const empty = document.createElement('div');
+      empty.className = 'sidebar-empty';
+      empty.textContent = 'No APIs match "' + apiSearch.trim() + '"';
+      list.appendChild(empty);
+    }
+  }
+
+  function renderEnvironments() {
+    const list = document.getElementById('environments-list');
+    const select = document.getElementById('active-env');
+    list.innerHTML = '';
+    select.innerHTML = '<option value="">No environment</option>';
+    state.environments.forEach(env => {
+      const item = document.createElement('div');
+      item.className = 'sidebar-item' + (state.activeEnvId === env.id ? ' is-active' : '');
+      item.innerHTML = `<span class="name">${esc(env.name)}</span>`;
+      const itemAct = document.createElement('span');
+      itemAct.className = 'item-actions';
+      itemAct.style.width = '28px';
+      const delBtn = document.createElement('button');
+      delBtn.className = 'icon-btn';
+      delBtn.title = 'Delete environment';
+      delBtn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+      delBtn.onclick = async (e) => {
+        e.stopPropagation();
+        if (!(await uiConfirm('Delete environment "' + env.name + '"?'))) return;
+        state.environments = state.environments.filter(x => x.id !== env.id);
+        if (state.activeEnvId === env.id) {
+          state.activeEnvId = state.environments[0] ? state.environments[0].id : null;
+        }
+        saveState();
+        renderEnvironments();
+        showToast('Environment deleted', 'success');
+      };
+      itemAct.appendChild(delBtn);
+      item.appendChild(itemAct);
+      item.onclick = () => {
+        state.activeEnvId = env.id;
+        document.getElementById('active-env').value = env.id;
+        saveState();
+        renderEnvironments();
+      };
+      list.appendChild(item);
+      const opt = document.createElement('option');
+      opt.value = env.id;
+      opt.textContent = env.name;
+      if (state.activeEnvId === env.id) opt.selected = true;
+      select.appendChild(opt);
+    });
+  }
+
+  function setActiveEnv(id) {
+    state.activeEnvId = id || null;
+    saveState();
+    renderEnvironments();
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  /* =========================================================================
+     KV tables
+     ========================================================================= */
+  function addKvRow(tableId, data) {
+    data = data || { key: '', value: '', enabled: true };
+    const tbody = document.querySelector('#' + tableId + '-table tbody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="kv-check"><input type="checkbox" ${data.enabled !== false ? 'checked' : ''}/></td>
+      <td class="kv-key"><input class="input" placeholder="Key" value="${esc(data.key)}"/></td>
+      <td class="kv-value"><input class="input" placeholder="Value" value="${esc(data.value)}"/></td>
+      <td class="kv-del"><button class="icon-btn" type="button"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></td>`;
+    tr.querySelector('.kv-del button').onclick = () => tr.remove();
+    tbody.appendChild(tr);
+  }
+
+  function getKvRows(tableId) {
+    const rows = [];
+    document.querySelectorAll('#' + tableId + '-table tbody tr').forEach(tr => {
+      const enabled = tr.querySelector('input[type=checkbox]').checked;
+      const key = tr.querySelector('.kv-key input').value.trim();
+      const value = tr.querySelector('.kv-value input').value;
+      if (key) rows.push({ key, value, enabled });
+    });
+    return rows;
+  }
+
+  function setKvRows(tableId, rows) {
+    const tbody = document.querySelector('#' + tableId + '-table tbody');
+    tbody.innerHTML = '';
+    (rows || []).forEach(r => addKvRow(tableId, r));
+    if (!(rows && rows.length)) addKvRow(tableId);
+  }
+
+  function addFormDataRow(data) {
+    data = data || { key: '', value: '', type: 'text', enabled: true };
+    const tbody = document.querySelector('#formdata-table tbody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="kv-check"><input type="checkbox" ${data.enabled !== false ? 'checked' : ''}/></td>
+      <td class="kv-key"><input class="input" placeholder="Key" value="${esc(data.key)}"/></td>
+      <td style="width:90px;"><select class="select" style="padding:7px 8px; font-size:12px;">
+        <option value="text" ${data.type !== 'file' ? 'selected' : ''}>Text</option>
+        <option value="file" ${data.type === 'file' ? 'selected' : ''}>File</option>
+      </select></td>
+      <td class="kv-value"><input class="input" placeholder="Value" value="${esc(data.value || '')}" data-type="text"/>
+        <input type="file" class="input form-data-file" style="display:none; padding:4px;" data-type="file"/></td>
+      <td class="kv-del"><button class="icon-btn" type="button"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></td>`;
+    const typeSel = tr.querySelector('select');
+    const textIn = tr.querySelector('[data-type=text]');
+    const fileIn = tr.querySelector('[data-type=file]');
+    typeSel.onchange = () => {
+      if (typeSel.value === 'file') { textIn.style.display = 'none'; fileIn.style.display = 'block'; }
+      else { textIn.style.display = 'block'; fileIn.style.display = 'none'; }
+    };
+    if (data.type === 'file') typeSel.onchange();
+    tr.querySelector('.kv-del button').onclick = () => tr.remove();
+    tbody.appendChild(tr);
+  }
+
+  function getFormDataRows() {
+    const rows = [];
+    document.querySelectorAll('#formdata-table tbody tr').forEach(tr => {
+      const enabled = tr.querySelector('input[type=checkbox]').checked;
+      const key = tr.querySelector('.kv-key input').value.trim();
+      const type = tr.querySelector('select').value;
+      if (!key) return;
+      if (type === 'file') {
+        const file = tr.querySelector('[data-type=file]').files[0];
+        rows.push({ key, type: 'file', file, enabled });
+      } else {
+        rows.push({ key, type: 'text', value: tr.querySelector('[data-type=text]').value, enabled });
+      }
+    });
+    return rows;
+  }
+
+  /* =========================================================================
+     Request panels
+     ========================================================================= */
+  document.querySelectorAll('#req-tabs .tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('#req-tabs .tab').forEach(t => t.classList.remove('is-active'));
+      tab.classList.add('is-active');
+      document.querySelectorAll('.req-panel').forEach(p => p.classList.remove('is-active'));
+      document.getElementById('panel-' + tab.dataset.panel).classList.add('is-active');
+    });
+  });
+
+  let bodyType = 'none';
+  document.querySelectorAll('#body-type-tabs .tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('#body-type-tabs .tab').forEach(t => t.classList.remove('is-active'));
+      tab.classList.add('is-active');
+      bodyType = tab.dataset.body;
+      document.querySelectorAll('.body-panel').forEach(p => p.style.display = 'none');
+      document.getElementById('body-' + bodyType).style.display = '';
+      document.getElementById('raw-lang').style.display = bodyType === 'raw' ? '' : 'none';
+    });
+  });
+
+  document.getElementById('binary-file').addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    document.getElementById('binary-meta').textContent = f ? (f.name + ' · ' + (f.size / 1024).toFixed(1) + ' KB') : '';
+  });
+
+  /* =========================================================================
+     Variable interpolation
+     ========================================================================= */
+  function getActiveEnvVars() {
+    const env = state.environments.find(e => e.id === state.activeEnvId);
+    const map = {};
+    if (env) {
+      (env.values || []).forEach(v => {
+        if (v.enabled !== false && v.key) map[v.key] = v.value != null ? String(v.value) : '';
+      });
+    }
+    return map;
+  }
+
+  function interpolate(str, vars) {
+    if (str == null) return '';
+    vars = vars || getActiveEnvVars();
+    return String(str).replace(/\{\{\s*([a-zA-Z0-9_.-]+)\s*\}\}/g, (_, key) => {
+      return vars.hasOwnProperty(key) ? vars[key] : '{{' + key + '}}';
+    });
+  }
+
+  /* =========================================================================
+     Script sandbox (pm API subset)
+     ========================================================================= */
+
+  function createPmApi(ctx) {
+    const logs = [];
+    const tests = [];
+    const consoleApi = {
+      log: (...a) => logs.push({ kind: 'log', args: a }),
+      warn: (...a) => logs.push({ kind: 'warn', args: a }),
+      error: (...a) => logs.push({ kind: 'error', args: a }),
+      info: (...a) => logs.push({ kind: 'info', args: a })
+    };
+    const env = {
+      get: (k) => {
+        const vars = getActiveEnvVars();
+        return vars[k];
+      },
+      set: (k, v) => {
+        let e = state.environments.find(x => x.id === state.activeEnvId);
+        if (!e) {
+          e = { id: uid(), name: 'Default', values: [] };
+          state.environments.push(e);
+          state.activeEnvId = e.id;
+        }
+        let found = e.values.find(x => x.key === k);
+        if (found) found.value = String(v);
+        else e.values.push({ key: k, value: String(v), enabled: true });
+        saveState();
+        try { renderEnvironments(); } catch (err) {}
+      },
+      unset: (k) => {
+        const e = state.environments.find(x => x.id === state.activeEnvId);
+        if (!e) return;
+        e.values = e.values.filter(x => x.key !== k);
+        saveState();
+      }
+    };
+    const variables = {
+      get: (k) => env.get(k),
+      set: (k, v) => env.set(k, v)
+    };
+    const response = ctx.response ? {
+      code: ctx.response.status,
+      status: ctx.response.statusText,
+      headers: ctx.response.headers,
+      responseTime: ctx.response.time,
+      text: () => ctx.response.bodyText,
+      json: () => {
+        try { return JSON.parse(ctx.response.bodyText); }
+        catch (e) { throw new Error('Response is not valid JSON'); }
+      },
+      // Replace what the Response panel displays (string, or object -> pretty JSON)
+      setBody: (b) => {
+        const text = typeof b === 'string' ? b : (b === undefined ? '' : JSON.stringify(b, null, 2));
+        if (ctx.response.originalBodyText === undefined) ctx.response.originalBodyText = ctx.response.bodyText;
+        ctx.response.bodyText = text;
+        ctx.response.size = new TextEncoder().encode(text).length;
+        ctx.response.bodyModified = true;
+        logs.push({ kind: 'info', args: ['Response body replaced by pm.response.setBody()'] });
+      }
+    } : null;
+
+    const expect = (actual) => ({
+      to: {
+        eql: (expected) => {
+          if (actual !== expected) throw new Error('Expected ' + JSON.stringify(expected) + ' but got ' + JSON.stringify(actual));
+        },
+        equal: function (expected) { return this.eql(expected); },
+        include: (substr) => {
+          if (String(actual).indexOf(substr) === -1) throw new Error('Expected to include ' + JSON.stringify(substr));
+        }
+      }
+    });
+
+    // Mutable request for pre-request scripts (url, method, headers, body)
+    const request = ctx.request || {
+      method: 'GET',
+      url: '',
+      headers: {},
+      body: ''
+    };
+
+    // pm.request.body behaves like the body string (works with CryptoJS parse(), .trim(), ...)
+    // and also supports Postman style  pm.request.body.raw = '...'  and  pm.request.body.update('...')
+    const coerceBody = (v) => {
+      if (typeof v === 'string') return v;
+      if (v === null || v === undefined) return '';
+      if (v === bodyApi) return bodyText;
+      if (typeof v === 'object') { try { return JSON.stringify(v); } catch (e) { return String(v); } }
+      return String(v);
+    };
+    let bodyText = coerceBody(request.body);
+    const bodyApi = new Proxy({}, {
+      get(_, prop) {
+        if (prop === 'raw') return bodyText;
+        if (prop === 'mode') return 'raw';
+        if (prop === 'update') return (v) => { bodyText = coerceBody(v); };
+        if (prop === 'toString' || prop === 'valueOf' || prop === 'toJSON') return () => bodyText;
+        if (prop === Symbol.toPrimitive) return () => bodyText;
+        if (prop === 'length') return bodyText.length;
+        if (typeof prop === 'string' && /^\d+$/.test(prop)) return bodyText[prop];
+        const fn = String.prototype[prop];
+        if (typeof fn === 'function' && prop !== 'constructor') return (...a) => fn.apply(bodyText, a);
+        return undefined;
+      },
+      set(_, prop, v) { if (prop === 'raw') bodyText = coerceBody(v); return true; }
+    });
+    Object.defineProperty(request, 'body', {
+      enumerable: true,
+      configurable: true,
+      get: () => bodyApi,
+      set: (v) => { bodyText = coerceBody(v); }
+    });
+
+    const pm = {
+      environment: env,
+      variables,
+      request,
+      response,
+      test: (name, fn) => {
+        try {
+          fn();
+          tests.push({ name, passed: true });
+          logs.push({ kind: 'log', args: ['✓ ' + name] });
+        } catch (e) {
+          tests.push({ name, passed: false, error: e.message });
+          logs.push({ kind: 'error', args: ['✗ ' + name + ': ' + e.message] });
+        }
+      },
+      expect
+    };
+    return { pm, console: consoleApi, logs, tests, requestBody: () => bodyText };
+  }
+
+  function runScript(code, ctx, consoleElId) {
+    const box = typeof consoleElId === 'string' ? document.getElementById(consoleElId) : consoleElId;
+    if (box) box.innerHTML = '';
+    if (!code || !code.trim()) {
+      if (box) box.innerHTML = '<div class="sc-empty">No script.</div>';
+      return { logs: [], tests: [], pm: null };
+    }
+    const api = createPmApi(ctx);
+    try {
+      // CryptoJS is available for your own encrypt/decrypt code
+      const fn = new Function('pm', 'console', 'CryptoJS', code);
+      fn(api.pm, api.console, typeof CryptoJS !== 'undefined' ? CryptoJS : undefined);
+    } catch (e) {
+      api.logs.push({ kind: 'error', args: [e.message] });
+    }
+    if (box) {
+      if (!api.logs.length) {
+        box.innerHTML = '<div class="sc-empty">Script ran with no output.</div>';
+      } else {
+        api.logs.forEach(l => {
+          const div = document.createElement('div');
+          div.className = 'sc-' + l.kind;
+          div.textContent = l.args.map(a => {
+            try { return typeof a === 'string' ? a : JSON.stringify(a); }
+            catch (e) { return String(a); }
+          }).join(' ');
+          box.appendChild(div);
+        });
+      }
+    }
+    return { logs: api.logs, tests: api.tests, pm: api.pm, requestBody: api.requestBody() };
+  }
+
+  function addHeaderPreset(key, value) {
+    const rows = getKvRows('headers');
+    const existing = rows.find(r => r.key.toLowerCase() === key.toLowerCase());
+    if (existing) {
+      // update value in table
+      document.querySelectorAll('#headers-table tbody tr').forEach(tr => {
+        const k = tr.querySelector('.kv-key input');
+        if (k && k.value.trim().toLowerCase() === key.toLowerCase()) {
+          tr.querySelector('.kv-value input').value = value;
+          tr.querySelector('input[type=checkbox]').checked = true;
+        }
+      });
+    } else {
+      addKvRow('headers', { key, value, enabled: true });
+    }
+    showToast('Header ' + key + ' set', 'success');
+  }
+
+  function duplicateRequest(colId, reqId) {
+    const col = state.collections.find(c => c.id === colId);
+    if (!col) return;
+    const req = col.requests.find(r => r.id === reqId);
+    if (!req) return;
+    const copy = JSON.parse(JSON.stringify(req));
+    copy.id = uid();
+    copy.name = (req.name || 'Request') + ' Copy';
+    col.requests.push(copy);
+    saveState();
+    renderCollections();
+    loadRequest(colId, copy.id);
+    showToast('Request duplicated', 'success');
+  }
+
+  /* =========================================================================
+     Send request
+     ========================================================================= */
+
+  function isLocalFilePage() {
+    try { return location.protocol === 'file:' || location.origin === 'null' || !location.host; }
+    catch (e) { return true; }
+  }
+
+  let lastResponse = null;
+
+
+  /* ---- CodeMirror editors for JSON body + scripts ---- */
+  const cmEditors = { 'raw-body': null, 'prerequest-script': null, 'tests-script': null };
+
+  function getEditorValue(id) {
+    if (cmEditors[id]) return cmEditors[id].getValue();
+    const el = document.getElementById(id);
+    return el ? el.value : '';
+  }
+  function setEditorValue(id, val) {
+    if (cmEditors[id]) cmEditors[id].setValue(val == null ? '' : String(val));
+    else {
+      const el = document.getElementById(id);
+      if (el) el.value = val == null ? '' : String(val);
+    }
+  }
+
+  function cmTheme() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'material-darker' : 'default';
+  }
+
+  function initCodeMirrors() {
+    if (typeof CodeMirror === 'undefined') return;
+    const common = {
+      lineNumbers: true,
+      lineWrapping: true,
+      matchBrackets: true,
+      autoCloseBrackets: true,
+      styleActiveLine: true,
+      indentUnit: 2,
+      tabSize: 2,
+      theme: cmTheme(),
+      viewportMargin: Infinity
+    };
+    const map = [
+      { id: 'raw-body', mode: { name: 'javascript', json: true } },
+      { id: 'prerequest-script', mode: 'javascript' },
+      { id: 'tests-script', mode: 'javascript' }
+    ];
+    map.forEach(({ id, mode }) => {
+      const ta = document.getElementById(id);
+      if (!ta || cmEditors[id]) return;
+      cmEditors[id] = CodeMirror.fromTextArea(ta, { ...common, mode });
+      cmEditors[id].setSize('100%', id === 'raw-body' ? 220 : 200);
+      cmEditors[id].on('change', (cm, ch) => { if (ch.origin !== 'setValue') markDirty(); });
+    });
+    // Update JSON mode when raw language changes
+    const rawLang = document.getElementById('raw-lang');
+    if (rawLang) {
+      rawLang.addEventListener('change', () => {
+        if (!cmEditors['raw-body']) return;
+        const v = rawLang.value;
+        let mode = 'javascript';
+        if (v === 'json') mode = { name: 'javascript', json: true };
+        else if (v === 'xml' || v === 'html') mode = 'xml';
+        else if (v === 'javascript') mode = 'javascript';
+        else mode = null;
+        cmEditors['raw-body'].setOption('mode', mode);
+      });
+    }
+  }
+
+  function refreshCmEditors() {
+    Object.values(cmEditors).forEach(ed => {
+      if (!ed) return;
+      ed.setOption('theme', cmTheme());
+      ed.refresh();
+    });
+  }
+
+  // Refresh CodeMirror when switching request tabs
+  document.querySelectorAll('#req-tabs .tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      setTimeout(refreshCmEditors, 30);
+    });
+  });
+
+
+  /* ---- Response panel: resize / float / fullscreen ---- */
+  (function initResponsePanelControls() {
+    const split = document.getElementById('split-view');
+    const resizer = document.getElementById('split-resizer');
+    const reqPane = document.getElementById('req-body-pane');
+    const resPane = document.getElementById('response-area');
+    const head = document.getElementById('response-head');
+    if (!split || !resizer || !reqPane || !resPane) return;
+
+    let dragging = false;
+    resizer.addEventListener('mousedown', (e) => {
+      if (resPane.classList.contains('is-fullscreen') || resPane.classList.contains('is-floating')) return;
+      dragging = true;
+      resizer.classList.add('is-dragging');
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      const rect = split.getBoundingClientRect();
+      let y = e.clientY - rect.top;
+      const min = 80;
+      const max = rect.height - 100;
+      if (y < min) y = min;
+      if (y > max) y = max;
+      const reqPct = (y / rect.height) * 100;
+      reqPane.style.flex = '0 0 ' + reqPct + '%';
+      resPane.style.flex = '1 1 auto';
+    });
+    window.addEventListener('mouseup', () => {
+      if (!dragging) return;
+      dragging = false;
+      resizer.classList.remove('is-dragging');
+    });
+
+    // Drag floating window by header
+    let floatDrag = null;
+    head.addEventListener('mousedown', (e) => {
+      if (!resPane.classList.contains('is-floating')) return;
+      if (e.target.closest('button, select, .tab, input, a')) return;
+      floatDrag = {
+        ox: e.clientX - resPane.offsetLeft,
+        oy: e.clientY - resPane.offsetTop
+      };
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!floatDrag) return;
+      let left = e.clientX - floatDrag.ox;
+      let top = e.clientY - floatDrag.oy;
+      left = Math.max(0, Math.min(window.innerWidth - 120, left));
+      top = Math.max(0, Math.min(window.innerHeight - 80, top));
+      resPane.style.left = left + 'px';
+      resPane.style.top = top + 'px';
+      resPane.style.right = 'auto';
+      resPane.style.bottom = 'auto';
+    });
+    window.addEventListener('mouseup', () => { floatDrag = null; });
+  })();
+
+  function toggleResponseFullscreen(force) {
+    const res = document.getElementById('response-area');
+    const backdrop = document.getElementById('response-fs-backdrop');
+    const btn = document.getElementById('btn-res-fs');
+    if (!res) return;
+    const on = force === false ? false : force === true ? true : !res.classList.contains('is-fullscreen');
+    res.classList.remove('is-floating');
+    const floatBtn = document.getElementById('btn-res-float');
+    if (floatBtn) floatBtn.classList.remove('is-active');
+    if (on) {
+      res.classList.add('is-fullscreen');
+      if (backdrop) backdrop.classList.add('is-visible');
+      if (btn) btn.classList.add('is-active');
+      res.style.left = '';
+      res.style.top = '';
+      res.style.width = '';
+      res.style.height = '';
+    } else {
+      res.classList.remove('is-fullscreen');
+      if (backdrop) backdrop.classList.remove('is-visible');
+      if (btn) btn.classList.remove('is-active');
+    }
+  }
+
+  function toggleResponseFloat() {
+    const res = document.getElementById('response-area');
+    const btn = document.getElementById('btn-res-float');
+    const backdrop = document.getElementById('response-fs-backdrop');
+    if (!res) return;
+    const on = !res.classList.contains('is-floating');
+    res.classList.remove('is-fullscreen');
+    if (backdrop) backdrop.classList.remove('is-visible');
+    document.getElementById('btn-res-fs')?.classList.remove('is-active');
+    if (on) {
+      // position near center-right
+      const w = Math.min(720, window.innerWidth * 0.9);
+      const h = Math.min(480, window.innerHeight * 0.7);
+      res.style.width = w + 'px';
+      res.style.height = h + 'px';
+      res.style.left = Math.max(24, window.innerWidth - w - 40) + 'px';
+      res.style.top = Math.max(24, (window.innerHeight - h) / 2) + 'px';
+      res.style.right = 'auto';
+      res.style.bottom = 'auto';
+      res.classList.add('is-floating');
+      if (btn) btn.classList.add('is-active');
+    } else {
+      res.classList.remove('is-floating');
+      res.style.width = '';
+      res.style.height = '';
+      res.style.left = '';
+      res.style.top = '';
+      if (btn) btn.classList.remove('is-active');
+    }
+  }
+
+  // Esc closes fullscreen / float
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const res = document.getElementById('response-area');
+    if (!res) return;
+    if (res.classList.contains('is-fullscreen')) toggleResponseFullscreen(false);
+    else if (res.classList.contains('is-floating')) toggleResponseFloat();
+  });
+
+  async function sendRequest() {
+    const sendTabId = activeTabId;
+    const reqSnapshot = JSON.parse(JSON.stringify(collectCurrentRequestData()));
+    const testsCode = reqSnapshot.tests;
+    const btn = document.getElementById('btn-send');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    const vars = getActiveEnvVars();
+    let method = document.getElementById('req-method').value;
+    let url = interpolate(getEditorValue('req-url') || document.getElementById('req-url').value.trim(), vars);
+
+    // Build initial headers map for pre-request
+    const headerMap = {};
+    getKvRows('headers').filter(h => h.enabled).forEach(h => {
+      headerMap[interpolate(h.key, vars)] = interpolate(h.value, vars);
+    });
+
+    // Initial body from UI (may be replaced by pre-request)
+    let bodyTextForScript = '';
+    if (bodyType === 'raw') bodyTextForScript = getEditorValue('raw-body');
+    else if (bodyType === 'graphql') {
+      bodyTextForScript = JSON.stringify({
+        query: document.getElementById('gql-query').value,
+        variables: document.getElementById('gql-vars').value
+      });
+    }
+
+    // Pre-request — can mutate pm.request.url / method / headers / body and encrypt
+    const preReqCtx = {
+      request: {
+        method,
+        url,
+        headers: headerMap,
+        body: bodyTextForScript
+      }
+    };
+    const preResult = runScript(getEditorValue('prerequest-script'), preReqCtx, 'prerequest-console');
+    if (preResult.pm && preResult.pm.request) {
+      if (preResult.pm.request.method) method = preResult.pm.request.method;
+      if (preResult.pm.request.url) url = interpolate(String(preResult.pm.request.url), getActiveEnvVars());
+      if (preResult.pm.request.headers && typeof preResult.pm.request.headers === 'object') {
+        Object.keys(preResult.pm.request.headers).forEach(k => {
+          headerMap[k] = preResult.pm.request.headers[k];
+        });
+      }
+      if (preResult.requestBody != null && preResult.requestBody !== bodyTextForScript) {
+        // used only for this call - the Body tab keeps the original plain text
+        bodyTextForScript = preResult.requestBody;
+      }
+    }
+
+
+    // Query params
+    const params = getKvRows('params').filter(p => p.enabled);
+    if (params.length) {
+      const u = new URL(url, window.location.href);
+      params.forEach(p => u.searchParams.set(interpolate(p.key, vars), interpolate(p.value, vars)));
+      url = u.toString();
+    }
+
+    const headers = Object.assign({}, headerMap);
+
+    let body = undefined;
+    let multipartParts = null;   // VS Code: serialisable multipart parts, assembled by the host
+    let bodyBase64 = null;       // VS Code: binary body
+    const bt = bodyType;
+    // If pre-request set a body string, prefer it for raw
+    const preBodyOverride = (preResult && preResult.pm && preResult.requestBody != null) ? preResult.requestBody : null;
+
+    try {
+      if (bt === 'raw') {
+        body = preBodyOverride != null ? interpolate(preBodyOverride, getActiveEnvVars()) : interpolate(getEditorValue('raw-body'), vars);
+        const lang = document.getElementById('raw-lang').value;
+        if (lang === 'json' && !headers['Content-Type'] && !headers['content-type']) {
+          headers['Content-Type'] = 'application/json';
+        } else if (lang === 'xml' && !headers['Content-Type']) {
+          headers['Content-Type'] = 'application/xml';
+        }
+      } else if (bt === 'urlencoded') {
+        const pairs = getKvRows('urlencoded').filter(r => r.enabled);
+        const fd = new URLSearchParams();
+        pairs.forEach(p => fd.append(interpolate(p.key, vars), interpolate(p.value, vars)));
+        body = fd.toString();
+        if (!headers['Content-Type']) headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      } else if (bt === 'form-data') {
+        const rows = getFormDataRows().filter(r => r.enabled);
+        if (IS_DESKTOP) {
+          multipartParts = [];
+          for (const r of rows) {
+            const name = interpolate(r.key, vars);
+            if (r.type === 'file') {
+              if (!r.file) continue;
+              multipartParts.push({
+                name: name,
+                filename: r.file.name,
+                contentType: r.file.type || 'application/octet-stream',
+                dataBase64: await fileToBase64(r.file)
+              });
+            } else {
+              multipartParts.push({ name: name, value: interpolate(r.value || '', vars) });
+            }
+          }
+        } else {
+          const fd = new FormData();
+          rows.forEach(r => {
+            if (r.type === 'file' && r.file) fd.append(interpolate(r.key, vars), r.file);
+            else fd.append(interpolate(r.key, vars), interpolate(r.value || '', vars));
+          });
+          body = fd;
+        }
+        // The multipart boundary is generated by the sender (browser or extension host)
+        Object.keys(headers).forEach(k => { if (k.toLowerCase() === 'content-type') delete headers[k]; });
+      } else if (bt === 'binary') {
+        const file = document.getElementById('binary-file').files[0];
+        if (file) {
+          if (IS_DESKTOP) bodyBase64 = await fileToBase64(file);
+          else body = file;
+        }
+      } else if (bt === 'graphql') {
+        const query = interpolate(document.getElementById('gql-query').value, vars);
+        let variables = {};
+        const varsText = document.getElementById('gql-vars').value.trim();
+        if (varsText) {
+          try { variables = JSON.parse(interpolate(varsText, vars)); }
+          catch (e) { throw new Error('GraphQL variables are not valid JSON: ' + e.message); }
+        }
+        body = JSON.stringify({ query, variables });
+        if (!headers['Content-Type']) headers['Content-Type'] = 'application/json';
+      }
+
+
+      // Validate URL
+      try {
+        const parsed = new URL(url);
+        if (!/^https?:$/i.test(parsed.protocol)) {
+          throw new Error('URL must start with http:// or https://');
+        }
+      } catch (ue) {
+        throw new Error('Invalid URL: ' + url + (ue.message ? ' (' + ue.message + ')' : ''));
+      }
+
+      const fetchHeaders = Object.assign({}, headers);
+      const candidates = [{ label: 'direct', fetchUrl: url }];
+
+      // VS Code extension host: no CORS, direct Node HTTP
+      if (IS_DESKTOP) {
+        const result = await extensionFetch({
+          method,
+          url,
+          headers: fetchHeaders,
+          body: method === 'GET' || method === 'HEAD' ? undefined : body,
+          bodyBase64: method === 'GET' || method === 'HEAD' ? undefined : (bodyBase64 || undefined),
+          multipart: method === 'GET' || method === 'HEAD' ? undefined : (multipartParts || undefined),
+          timeoutMs: 60000
+        });
+        lastResponse = {
+          status: result.status,
+          statusText: result.statusText || '',
+          headers: result.headers || {},
+          bodyText: result.bodyText || '',
+          time: result.time || 0,
+          size: result.size != null ? result.size : (result.bodyText || '').length,
+          url,
+          method,
+          viaProxy: false
+        };
+      } else {
+      const t0 = performance.now();
+      let res = null;
+      let usedLabel = 'direct';
+      let lastErr = null;
+      for (const c of candidates) {
+        try {
+          const r = await fetch(c.fetchUrl, {
+            method,
+            headers: fetchHeaders,
+            body: method === 'GET' || method === 'HEAD' ? undefined : body,
+            mode: 'cors',
+            credentials: 'omit'
+          });
+          res = r;
+          usedLabel = c.label;
+          lastErr = null;
+          break;
+        } catch (err) {
+          lastErr = err;
+        }
+      }
+      if (!res) {
+        throw lastErr || new Error('Failed to fetch');
+      }
+      const t1 = performance.now();
+      const buf = await res.arrayBuffer();
+      const bodyText = new TextDecoder('utf-8', { fatal: false }).decode(buf);
+      const resHeaders = {};
+      res.headers.forEach((v, k) => { resHeaders[k] = v; });
+
+      lastResponse = {
+        status: res.status,
+        statusText: res.statusText,
+        headers: resHeaders,
+        bodyText,
+        time: Math.round(t1 - t0),
+        size: buf.byteLength,
+        url,
+        method,
+        viaProxy: usedLabel !== 'direct'
+      };
+      if (usedLabel !== 'direct') {
+        showToast('Via ' + usedLabel, 'success');
+      }
+      } /* end browser path */
+
+
+      try { lastResponse.requestSnapshot = reqSnapshot; } catch (e) {}
+      attachResponse(sendTabId, lastResponse);
+
+      // History
+      state.history.unshift({
+        id: uid(),
+        method,
+        url,
+        status: lastResponse.status,
+        time: lastResponse.time,
+        at: Date.now(),
+        request: reqSnapshot
+      });
+      state.history = state.history.slice(0, 50);
+      saveState();
+
+      // Post-response scripts (your own decrypt / tests)
+      if (sendTabId === activeTabId) {
+        const resObj = lastResponse;
+        runScript(testsCode, { response: resObj }, 'tests-console');
+        if (resObj && resObj.bodyModified && sendTabId === activeTabId) displayResponse(resObj);
+      } else {
+        // The user switched tabs while the request was running: keep output with its own tab
+        const tmp = document.createElement('div');
+        runScript(testsCode, { response: lastResponse }, tmp);
+        const st = getTab(sendTabId);
+        if (st) { st.consoles = st.consoles || {}; st.consoles.tests = tmp.innerHTML; }
+      }
+    } catch (e) {
+      lastResponse = null;
+      document.getElementById('res-status').textContent = 'Error';
+      document.getElementById('res-status').className = 'status-code status-5xx';
+      document.getElementById('res-time').textContent = '—';
+      document.getElementById('res-size').textContent = '—';
+      let msg = e.message || String(e);
+      if (IS_DESKTOP) {
+        msg = 'Request failed\n\n' + msg + '\n\n' +
+          (/ECONNREFUSED/i.test(msg) ? 'Nothing is listening at that address. Start your server and check the port.' :
+           /ENOTFOUND/i.test(msg) ? 'Host name could not be resolved. Check the URL.' :
+           /CERT|SELF.SIGNED/i.test(msg) ? 'TLS certificate rejected. For local HTTPS with self-signed certs, enable insecure TLS in the app settings (or set allowInsecureTls on the request).' : '');
+      } else if (/proxy is not running/i.test(msg)) {
+        // already a clear message from health check
+      } else if (/failed to fetch|networkerror|load failed/i.test(msg)) {
+        const isLocal = /localhost|127\.0\.0\.1/i.test(url || '');
+        if (isLocal || isLocalFilePage()) {
+          msg = 'Failed to reach localhost API\n\n' +
+            'This page is running in a browser, which blocks localhost calls (CORS).\n' +
+            'Use it inside VS Code instead: install the API Workbench extension,\n' +
+            'then Ctrl+Shift+P > "API Workbench: Open". No proxy or CORS needed.\n\n' +
+            'Also confirm your server is running on that port.\n\n' +
+            'Original error: ' + (e.message || e);
+        } else
+        msg = 'Failed to fetch (CORS / network)\n\n' +
+          'Browsers block APIs that omit Access-Control-Allow-Origin.\n' +
+          'Free public CORS proxies are often down or need API keys.\n\n' +
+          'Try this:\n' +
+          '1) Set top-bar CORS to "Auto" and Send again.\n' +
+          '2) Or CORS = "Custom" + run a local proxy:\n' +
+          '   npx local-cors-proxy --proxyUrl https://YOUR-API-HOST --port 8010\n' +
+          '   Custom proxy field: http://localhost:8010/proxy\n\n' +
+          '3) Verify the tool itself: GET https://httpbin.org/get with CORS Off.\n\n' +
+          'Original error: ' + (e.message || e);
+      }
+      document.getElementById('res-pretty').value = msg;
+      document.getElementById('res-raw').value = msg;
+      if (typeof renderPrettyHighlight === 'function') renderPrettyHighlight(msg, false);
+      document.getElementById('res-tree').innerHTML = '<div class="jt-tree-empty">' + esc(msg.split('\n')[0]) + '</div>';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Send';
+  }
+
+  function displayResponse(res) {
+    const statusEl = document.getElementById('res-status');
+    statusEl.textContent = res.status + ' ' + (res.statusText || '');
+    const cls = res.status >= 500 ? 'status-5xx' : res.status >= 400 ? 'status-4xx' : res.status >= 300 ? 'status-3xx' : 'status-2xx';
+    statusEl.className = 'status-code ' + cls;
+    document.getElementById('res-time').textContent = res.time + ' ms';
+    document.getElementById('res-size').textContent = formatBytes(res.size) + (res.viaProxy ? ' · via proxy' : '');
+
+    document.getElementById('res-raw').value = res.bodyText;
+
+    const format = document.getElementById('res-format').value;
+    let pretty = res.bodyText;
+    let treeData = null;
+    const ct = (res.headers['content-type'] || res.headers['Content-Type'] || '').toLowerCase();
+
+    const tryJson = () => {
+      try {
+        const obj = JSON.parse(res.bodyText);
+        pretty = JSON.stringify(obj, null, 2);
+        treeData = obj;
+        return true;
+      } catch (e) { return false; }
+    };
+    const tryXml = () => {
+      try {
+        const doc = new DOMParser().parseFromString(res.bodyText, 'application/xml');
+        if (doc.getElementsByTagName('parsererror').length) return false;
+        pretty = beautifyXml(res.bodyText);
+        treeData = { __xml: true, doc };
+        return true;
+      } catch (e) { return false; }
+    };
+
+    if (format === 'json' || (format === 'auto' && (ct.includes('json') || res.bodyText.trim().startsWith('{')))) {
+      tryJson();
+    } else if (format === 'xml' || (format === 'auto' && (ct.includes('xml') || res.bodyText.trim().startsWith('<')))) {
+      tryXml() || tryJson();
+    } else if (format === 'html') {
+      pretty = res.bodyText;
+    }
+
+    document.getElementById('res-pretty').value = pretty;
+    renderPrettyHighlight(pretty, treeData != null && !treeData.__xml);
+
+    // Headers table
+    const tbody = document.querySelector('#res-headers-table tbody');
+    tbody.innerHTML = '';
+    Object.keys(res.headers).sort().forEach(k => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="mono" style="font-weight:600;">${esc(k)}</td><td class="mono">${esc(res.headers[k])}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    // Tree
+    const treeEl = document.getElementById('res-tree');
+    treeEl.innerHTML = '';
+    if (treeData && treeData.__xml) {
+      treeEl.appendChild(jtXmlNode(treeData.doc.documentElement));
+    } else if (treeData != null) {
+      treeEl.appendChild(jtJsonNode(treeData, null, false));
+    } else {
+      treeEl.innerHTML = '<div class="jt-tree-empty">Tree view is available for JSON and XML responses.</div>';
+    }
+  }
+
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  /** Tokenize pretty-printed JSON into colored HTML */
+  function highlightJson(text) {
+    let out = '';
+    let i = 0;
+    const s = String(text);
+    const len = s.length;
+    while (i < len) {
+      const ch = s[i];
+      if (ch === '"') {
+        let j = i + 1;
+        let escaped = false;
+        while (j < len) {
+          if (escaped) { escaped = false; j++; continue; }
+          if (s[j] === '\\') { escaped = true; j++; continue; }
+          if (s[j] === '"') { j++; break; }
+          j++;
+        }
+        const raw = s.slice(i, j);
+        let k = j;
+        while (k < len && /\s/.test(s[k])) k++;
+        const isKey = s[k] === ':';
+        out += '<span class="' + (isKey ? 'jk' : 'js') + '">' + escapeHtml(raw) + '</span>';
+        i = j;
+      } else if (/[-0-9]/.test(ch) && (i === 0 || /[\s:\[{,]/.test(s[i - 1]))) {
+        let j = i;
+        if (s[j] === '-') j++;
+        while (j < len && /[0-9.eE+-]/.test(s[j])) j++;
+        out += '<span class="jn">' + escapeHtml(s.slice(i, j)) + '</span>';
+        i = j;
+      } else if (s.startsWith('true', i) && !/\w/.test(s[i + 4] || '')) {
+        out += '<span class="jb">true</span>'; i += 4;
+      } else if (s.startsWith('false', i) && !/\w/.test(s[i + 5] || '')) {
+        out += '<span class="jb">false</span>'; i += 5;
+      } else if (s.startsWith('null', i) && !/\w/.test(s[i + 4] || '')) {
+        out += '<span class="jl">null</span>'; i += 4;
+      } else if (/[{}\[\],:]/.test(ch)) {
+        out += '<span class="jp">' + escapeHtml(ch) + '</span>';
+        i++;
+      } else {
+        out += escapeHtml(ch);
+        i++;
+      }
+    }
+    return out;
+  }
+
+  function renderPrettyHighlight(text, preferJson) {
+    const hl = document.getElementById('res-pretty-hl');
+    const ta = document.getElementById('res-pretty');
+    if (!text) {
+      hl.innerHTML = '';
+      hl.dataset.mode = 'empty';
+      hl.style.display = 'none';
+      ta.style.display = 'block';
+      ta.value = '';
+      return;
+    }
+    const activeView = document.querySelector('#res-view-tabs .tab.is-active');
+    const isPretty = !activeView || activeView.dataset.resview === 'pretty';
+    // Try JSON highlight when content looks like JSON
+    const trimmed = text.trim();
+    const looksJson = preferJson || trimmed.startsWith('{') || trimmed.startsWith('[');
+    if (looksJson) {
+      try {
+        // ensure valid-ish JSON for highlight (already pretty-printed usually)
+        hl.innerHTML = highlightJson(text);
+        hl.dataset.mode = 'hl';
+        if (isPretty) {
+          hl.style.display = 'block';
+          ta.style.display = 'none';
+        }
+        return;
+      } catch (e) { /* fall through */ }
+    }
+    hl.innerHTML = escapeHtml(text);
+    hl.dataset.mode = 'plain';
+    if (isPretty) {
+      hl.style.display = 'block';
+      ta.style.display = 'none';
+    }
+  }
+
+  function formatBytes(n) {
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+    return (n / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+
+  function beautifyXml(xml) {
+    const withBreaks = xml.replace(/>\s*</g, '>\n<');
+    const lines = withBreaks.split('\n').map(l => l.trim()).filter(Boolean);
+    let pad = 0;
+    const out = [];
+    const indent = '  ';
+    for (const line of lines) {
+      const isClosing = /^<\//.test(line);
+      const isSelf = /\/>$/.test(line);
+      const single = line.indexOf('<', 1) === -1;
+      const isOpen = /^<[A-Za-z]/.test(line) && !isClosing && !isSelf && single;
+      if (isClosing && pad > 0) pad -= 1;
+      out.push(indent.repeat(pad) + line);
+      if (isOpen) pad += 1;
+    }
+    return out.join('\n');
+  }
+
+  /* Response view tabs */
+  document.querySelectorAll('#res-view-tabs .tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('#res-view-tabs .tab').forEach(t => t.classList.remove('is-active'));
+      tab.classList.add('is-active');
+      const v = tab.dataset.resview;
+      const useHl = v === 'pretty' && document.getElementById('res-pretty-hl').dataset.mode === 'hl';
+      document.getElementById('res-pretty').style.display = (v === 'pretty' && !useHl) ? 'block' : 'none';
+      document.getElementById('res-pretty-hl').style.display = (v === 'pretty' && useHl) ? 'block' : 'none';
+      document.getElementById('res-raw').style.display = v === 'raw' ? 'block' : 'none';
+      document.getElementById('res-tree').style.display = v === 'tree' ? 'block' : 'none';
+      document.getElementById('res-headers').style.display = v === 'headers' ? 'block' : 'none';
+    });
+  });
+
+  document.getElementById('res-format').addEventListener('change', () => {
+    if (lastResponse) displayResponse(lastResponse);
+  });
+
+  function copyResponse() {
+    const active = document.querySelector('#res-view-tabs .tab.is-active').dataset.resview;
+    let text = '';
+    if (active === 'raw') text = document.getElementById('res-raw').value;
+    else if (active === 'pretty') text = document.getElementById('res-pretty').value;
+    else if (active === 'headers' && lastResponse) {
+      text = Object.entries(lastResponse.headers).map(([k, v]) => k + ': ' + v).join('\n');
+    } else text = document.getElementById('res-pretty').value;
+    navigator.clipboard.writeText(text || '').catch(() => {});
+  }
+
+  function storeCurrentResponse() {
+    if (!lastResponse) {
+      showToast('No response to store. Send a request first.', 'danger');
+      return;
+    }
+    const def = (lastResponse.method || 'GET') + ' ' + String(lastResponse.url || '').slice(0, 60);
+    document.getElementById('store-name').value = def;
+    openModal('modal-store');
+  }
+  function confirmStoreResponse() {
+    if (!lastResponse) return;
+    const name = document.getElementById('store-name').value.trim() || 'Saved response';
+    state.savedResponses.unshift({
+      id: uid(),
+      name,
+      at: Date.now(),
+      status: lastResponse.status,
+      bodyText: lastResponse.bodyText,
+      headers: lastResponse.headers,
+      url: lastResponse.url,
+      method: lastResponse.method,
+      statusText: lastResponse.statusText || '',
+      time: lastResponse.time || 0,
+      request: lastResponse.requestSnapshot || null
+    });
+    state.savedResponses = state.savedResponses.slice(0, 30);
+    saveState();
+    closeModal('modal-store');
+    showToast('Response stored: ' + name, 'success');
+  }
+  function showToast(msg, type) {
+    let el = document.getElementById('cd-toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'cd-toast';
+      el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:400;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);max-width:90vw;';
+      document.body.appendChild(el);
+    }
+    el.style.background = type === 'danger' ? 'var(--danger-soft)' : 'var(--success-soft)';
+    el.style.color = type === 'danger' ? 'var(--danger)' : 'var(--success)';
+    el.style.border = '1px solid currentColor';
+    el.textContent = msg;
+    el.style.display = 'block';
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => { el.style.display = 'none'; }, 2800);
+  }
+
+  /* =========================================================================
+     Tree rendering (simplified from CipherDeck)
+     ========================================================================= */
+  function jtJsonNode(value, key, isArrayIndex) {
+    const wrap = document.createElement('div');
+    wrap.className = 'jt-node';
+    const isArr = Array.isArray(value);
+    const isObj = value !== null && typeof value === 'object';
+
+    if (isObj) {
+      const entries = isArr ? value.map((v, i) => [i, v]) : Object.entries(value);
+      const head = document.createElement('div');
+      head.className = 'jt-node-head';
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'jt-toggle';
+      toggle.textContent = '▾';
+      head.appendChild(toggle);
+      if (key !== null) {
+        const keySpan = document.createElement('span');
+        keySpan.className = isArrayIndex ? 'jt-index' : 'jt-key';
+        keySpan.textContent = isArrayIndex ? key + ': ' : JSON.stringify(String(key)) + ': ';
+        head.appendChild(keySpan);
+      }
+      const openSpan = document.createElement('span');
+      openSpan.className = 'jt-bracket';
+      openSpan.textContent = isArr ? '[' : '{';
+      head.appendChild(openSpan);
+      const countSpan = document.createElement('span');
+      countSpan.className = 'jt-count';
+      countSpan.textContent = entries.length + (isArr ? (entries.length === 1 ? ' item' : ' items') : (entries.length === 1 ? ' key' : ' keys'));
+      head.appendChild(countSpan);
+      const previewSpan = document.createElement('span');
+      previewSpan.className = 'jt-preview';
+      previewSpan.style.display = 'none';
+      previewSpan.textContent = ' … ' + (isArr ? ']' : '}');
+      head.appendChild(previewSpan);
+      wrap.appendChild(head);
+      const children = document.createElement('div');
+      children.className = 'jt-children';
+      entries.forEach(([k, v]) => children.appendChild(jtJsonNode(v, k, isArr)));
+      wrap.appendChild(children);
+      const closeLine = document.createElement('div');
+      closeLine.className = 'jt-node-close';
+      closeLine.textContent = isArr ? ']' : '}';
+      wrap.appendChild(closeLine);
+      if (entries.length === 0) { toggle.disabled = true; toggle.style.visibility = 'hidden'; }
+      else {
+        toggle.addEventListener('click', () => {
+          const collapsed = wrap.classList.toggle('is-collapsed');
+          toggle.textContent = collapsed ? '▸' : '▾';
+          children.style.display = collapsed ? 'none' : '';
+          closeLine.style.display = collapsed ? 'none' : '';
+          previewSpan.style.display = collapsed ? '' : 'none';
+        });
+      }
+    } else {
+      const line = document.createElement('div');
+      line.className = 'jt-leaf';
+      line.innerHTML = '<span class="jt-toggle-spacer"></span>';
+      if (key !== null) {
+        const keySpan = document.createElement('span');
+        keySpan.className = isArrayIndex ? 'jt-index' : 'jt-key';
+        keySpan.textContent = isArrayIndex ? key + ': ' : JSON.stringify(String(key)) + ': ';
+        line.appendChild(keySpan);
+      }
+      const valSpan = document.createElement('span');
+      if (value === null) { valSpan.className = 'jt-null'; valSpan.textContent = 'null'; }
+      else if (typeof value === 'string') { valSpan.className = 'jt-string'; valSpan.textContent = JSON.stringify(value); }
+      else if (typeof value === 'number') { valSpan.className = 'jt-number'; valSpan.textContent = String(value); }
+      else if (typeof value === 'boolean') { valSpan.className = 'jt-bool'; valSpan.textContent = String(value); }
+      else { valSpan.textContent = String(value); }
+      line.appendChild(valSpan);
+      wrap.appendChild(line);
+    }
+    return wrap;
+  }
+
+  function jtXmlNode(elNode) {
+    const wrap = document.createElement('div');
+    wrap.className = 'jt-node';
+    const childElements = Array.from(elNode.children || []);
+    const textContent = Array.from(elNode.childNodes).filter(nd => nd.nodeType === 3).map(nd => nd.textContent).join('').trim();
+    const hasChildren = childElements.length > 0;
+    const head = document.createElement('div');
+    head.className = 'jt-node-head';
+    let openTagStr = '<' + elNode.tagName;
+    for (const attr of elNode.attributes) openTagStr += ' ' + attr.name + '="' + attr.value + '"';
+    openTagStr += hasChildren ? '>' : (textContent ? '>' : ' />');
+    if (hasChildren) {
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'jt-toggle';
+      toggle.textContent = '▾';
+      head.appendChild(toggle);
+    } else {
+      const spacer = document.createElement('span');
+      spacer.className = 'jt-toggle-spacer';
+      head.appendChild(spacer);
+    }
+    const tagSpan = document.createElement('span');
+    tagSpan.className = 'jt-tag';
+    tagSpan.textContent = openTagStr;
+    head.appendChild(tagSpan);
+    if (!hasChildren && textContent) {
+      const txt = document.createElement('span');
+      txt.className = 'jt-string';
+      txt.textContent = textContent;
+      head.appendChild(txt);
+      const closeTag = document.createElement('span');
+      closeTag.className = 'jt-tag';
+      closeTag.textContent = '</' + elNode.tagName + '>';
+      head.appendChild(closeTag);
+    }
+    let previewSpan = null;
+    if (hasChildren) {
+      const countSpan = document.createElement('span');
+      countSpan.className = 'jt-count';
+      countSpan.textContent = childElements.length + (childElements.length === 1 ? ' child' : ' children');
+      head.appendChild(countSpan);
+      previewSpan = document.createElement('span');
+      previewSpan.className = 'jt-preview';
+      previewSpan.style.display = 'none';
+      previewSpan.textContent = ' … </' + elNode.tagName + '>';
+      head.appendChild(previewSpan);
+    }
+    wrap.appendChild(head);
+    if (hasChildren) {
+      const children = document.createElement('div');
+      children.className = 'jt-children';
+      childElements.forEach(childEl => children.appendChild(jtXmlNode(childEl)));
+      wrap.appendChild(children);
+      const closeLine = document.createElement('div');
+      closeLine.className = 'jt-node-close';
+      closeLine.textContent = '</' + elNode.tagName + '>';
+      wrap.appendChild(closeLine);
+      const toggle = head.querySelector('.jt-toggle');
+      toggle.addEventListener('click', () => {
+        const collapsed = wrap.classList.toggle('is-collapsed');
+        toggle.textContent = collapsed ? '▸' : '▾';
+        children.style.display = collapsed ? 'none' : '';
+        closeLine.style.display = collapsed ? 'none' : '';
+        if (previewSpan) previewSpan.style.display = collapsed ? '' : 'none';
+      });
+    }
+    return wrap;
+  }
+
+  /* =========================================================================
+     Load / save request
+     ========================================================================= */
+  let renameCtx = null;
+  function openRename(kind, id, currentName, colId) {
+    renameCtx = { kind, id, colId };
+    document.getElementById('rename-modal-title').textContent = kind === 'collection' ? 'Rename collection' : 'Rename request';
+    document.getElementById('rename-input').value = currentName || '';
+    openModal('modal-rename');
+    setTimeout(() => document.getElementById('rename-input').focus(), 50);
+  }
+  function confirmRename() {
+    if (!renameCtx) return;
+    const name = document.getElementById('rename-input').value.trim();
+    if (!name) return;
+    if (renameCtx.kind === 'collection') {
+      const c = state.collections.find(x => x.id === renameCtx.id);
+      if (c) c.name = name;
+    } else {
+      const col = state.collections.find(x => x.id === renameCtx.colId);
+      const req = col && col.requests.find(r => r.id === renameCtx.id);
+      if (req) {
+        req.name = name;
+        if (state.activeRequestId === req.id) {
+          document.getElementById('req-name').value = name;
+        }
+      }
+    }
+    saveState();
+    renderCollections();
+    closeModal('modal-rename');
+    showToast('Renamed to "' + name + '"', 'success');
+  }
+  function onRequestNameChange() {
+    const name = document.getElementById('req-name').value.trim();
+    if (!name || !state.activeRequestId || !state.activeCollectionId) return;
+    const col = state.collections.find(c => c.id === state.activeCollectionId);
+    const req = col && col.requests.find(r => r.id === state.activeRequestId);
+    if (req && req.name !== name) {
+      req.name = name;
+      saveState();
+      renderCollections();
+    }
+  }
+
+  /* ---- Request tabs ---- */
+  let openTabs = [];
+  let activeTabId = null;
+  const getTab = (id) => openTabs.find(t => t.id === id);
+  const activeTab = () => getTab(activeTabId);
+  function findReq(colId, reqId) {
+    const c = state.collections.find(x => x.id === colId);
+    return c ? c.requests.find(r => r.id === reqId) : null;
+  }
+  function applyRequest(req) {
+    document.getElementById('req-name').value = req.name || '';
+    document.getElementById('req-method').value = req.method || 'GET';
+    document.getElementById('req-url').value = req.url || '';
+    setKvRows('params', req.params || []);
+    setKvRows('headers', req.headers || []);
+    bodyType = req.bodyType || 'none';
+    document.querySelectorAll('#body-type-tabs .tab').forEach(t => {
+      t.classList.toggle('is-active', t.dataset.body === bodyType);
+    });
+    document.querySelectorAll('.body-panel').forEach(p => p.style.display = 'none');
+    document.getElementById('body-' + bodyType).style.display = '';
+    document.getElementById('raw-lang').style.display = bodyType === 'raw' ? '' : 'none';
+
+    const body = req.body || {};
+    setEditorValue('raw-body', body.raw || '');
+    document.getElementById('raw-lang').value = body.rawLang || 'json';
+    document.getElementById('gql-query').value = body.graphqlQuery || '';
+    document.getElementById('gql-vars').value = body.graphqlVars || '';
+    setKvRows('urlencoded', body.urlencoded || []);
+    const fdBody = document.querySelector('#formdata-table tbody');
+    fdBody.innerHTML = '';
+    (body.formdata || []).forEach(r => addFormDataRow(r));
+    if (!(body.formdata || []).length) addFormDataRow();
+
+    setEditorValue('prerequest-script', req.preRequest || '');
+    setEditorValue('tests-script', req.tests || '');
+
+  }
+  function persistTabs() {
+    state.openTabs = openTabs.map(t => ({ id: t.id, colId: t.colId, reqId: t.reqId }));
+    state.activeTabId = activeTabId;
+    saveState();
+  }
+  function snapshotActive() {
+    const t = activeTab();
+    if (!t) return;
+    t.draft = collectCurrentRequestData();
+    t.response = lastResponse;
+    t.consoles = {
+      pre: document.getElementById('prerequest-console').innerHTML,
+      tests: document.getElementById('tests-console').innerHTML
+    };
+  }
+  const CONSOLE_DEFAULTS = {
+    pre: '<div class="sc-empty">Script output appears here…</div>',
+    tests: '<div class="sc-empty">Post-response output appears here…</div>'
+  };
+  function restoreConsoles(t) {
+    const c = (t && t.consoles) || {};
+    document.getElementById('prerequest-console').innerHTML = c.pre || CONSOLE_DEFAULTS.pre;
+    document.getElementById('tests-console').innerHTML = c.tests || CONSOLE_DEFAULTS.tests;
+  }
+  function resetResponse() {
+    lastResponse = null;
+    const st = document.getElementById('res-status');
+    st.textContent = '—'; st.className = 'status-code';
+    document.getElementById('res-time').textContent = '—';
+    document.getElementById('res-size').textContent = '—';
+    document.getElementById('res-pretty').value = '';
+    document.getElementById('res-raw').value = '';
+    document.getElementById('res-tree').innerHTML = '<div class="jt-tree-empty">Send a request to see the response.</div>';
+    if (typeof renderPrettyHighlight === 'function') renderPrettyHighlight('', false);
+    restoreConsoles(null);
+  }
+  function showTabResponse(t) {
+    if (t.response) { lastResponse = t.response; displayResponse(t.response); }
+    else resetResponse();
+    restoreConsoles(t);
+  }
+  function attachResponse(tabId, res) {
+    const t = getTab(tabId);
+    if (t) t.response = res;
+    if (!t || tabId === activeTabId) displayResponse(res);
+  }
+  function renderTabs() {
+    const list = document.getElementById('tabstrip-list');
+    if (!list) return;
+    list.innerHTML = '';
+    openTabs.forEach(t => {
+      const saved = findReq(t.colId, t.reqId) || {};
+      const isActive = t.id === activeTabId;
+      const method = isActive ? document.getElementById('req-method').value : ((t.draft || saved).method || 'GET');
+      const el = document.createElement('div');
+      el.className = 'rtab' + (isActive ? ' is-active' : '');
+      el.setAttribute('role', 'tab');
+      el.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      el.title = (saved.name || 'Untitled') + '\n' + String((t.draft || saved).url || '') + '\n(double-click to rename, right-click for more)';
+      el.innerHTML = '<span class="m method-' + method.toLowerCase() + '"></span><span class="t"></span>' +
+        (t.dirty ? '<span class="dot" title="Unsaved changes"></span>' : '') +
+        (openTabs.length > 1 ? '<span class="x" title="Close" aria-label="Close tab">\u00d7</span>' : '');
+      el.querySelector('.m').textContent = method;
+      el.querySelector('.t').textContent = saved.name || 'Untitled';
+      el.onclick = () => activateTab(t.id);
+      el.oncontextmenu = (e) => { e.preventDefault(); openTabMenu(t.id, e.clientX, e.clientY); };
+      el.ondblclick = () => openRename('request', t.reqId, saved.name, t.colId);
+      el.onauxclick = (e) => { if (e.button === 1) { e.preventDefault(); closeTab(t.id); } };
+      const x = el.querySelector('.x');
+      if (x) x.onclick = (e) => { e.stopPropagation(); closeTab(t.id); };
+      list.appendChild(el);
+    });
+    const a = list.querySelector('.is-active');
+    if (a && a.scrollIntoView) a.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+  function markDirty() {
+    const t = activeTab();
+    if (t && !t.dirty) { t.dirty = true; renderTabs(); }
+  }
+  function activateTab(id) {
+    if (id === activeTabId) return;
+    const t = getTab(id);
+    if (!t) return;
+    snapshotActive();
+    activeTabId = id;
+    const saved = findReq(t.colId, t.reqId);
+    if (!saved) return;
+    state.activeCollectionId = t.colId;
+    state.activeRequestId = t.reqId;
+    state.currentRequest = saved;
+    applyRequest(Object.assign({}, t.draft || saved, { name: saved.name }));
+    showTabResponse(t);
+    renderTabs();
+    renderCollections();
+    persistTabs();
+  }
+  function openRequestTab(colId, reqId) {
+    let t = openTabs.find(x => x.reqId === reqId);
+    if (t) { activateTab(t.id); return; }
+    const saved = findReq(colId, reqId);
+    if (!saved) return;
+    snapshotActive();
+    t = { id: uid(), colId, reqId, draft: null, response: null, dirty: false };
+    openTabs.push(t);
+    activeTabId = t.id;
+    state.activeCollectionId = colId;
+    state.activeRequestId = reqId;
+    state.currentRequest = saved;
+    applyRequest(saved);
+    resetResponse();
+    renderTabs();
+    renderCollections();
+    persistTabs();
+  }
+  function loadRequest(colId, reqId) { openRequestTab(colId, reqId); }
+  async function closeTab(id) {
+    if (openTabs.length <= 1) return;
+    const t = getTab(id);
+    if (!t) return;
+    if (t.dirty) {
+      const saved = findReq(t.colId, t.reqId) || {};
+      if (!(await uiConfirm('Close "' + (saved.name || 'Untitled') + '" and discard unsaved changes?', 'Discard'))) return;
+    }
+    const idx = openTabs.indexOf(t);
+    const wasActive = id === activeTabId;
+    openTabs.splice(idx, 1);
+    if (wasActive) {
+      activeTabId = null;
+      activateTab(openTabs[Math.min(idx, openTabs.length - 1)].id);
+    } else { renderTabs(); persistTabs(); }
+  }
+  async function closeTabsBulk(ids, focusId) {
+    const targets = openTabs.filter(t => ids.indexOf(t.id) >= 0);
+    if (!targets.length) return;
+    const dirty = targets.filter(t => t.dirty).length;
+    if (dirty && !(await uiConfirm(dirty + ' tab' + (dirty > 1 ? 's have' : ' has') + ' unsaved changes. Close and discard?', 'Discard'))) return;
+    const wasActiveClosed = ids.indexOf(activeTabId) >= 0;
+    openTabs = openTabs.filter(t => ids.indexOf(t.id) < 0);
+    if (wasActiveClosed) activeTabId = null;
+    if (!openTabs.length) { newTab(); return; }   // the editor always needs one tab
+    const next = getTab(focusId) || getTab(activeTabId) || openTabs[openTabs.length - 1];
+    if (next.id === activeTabId) { renderTabs(); persistTabs(); }
+    else activateTab(next.id);
+  }
+  function closeTabMenuNow() {
+    const m = document.getElementById('tab-menu');
+    if (m) m.remove();
+    document.removeEventListener('mousedown', _tabMenuAway, true);
+    document.removeEventListener('keydown', _tabMenuKey, true);
+    window.removeEventListener('blur', closeTabMenuNow);
+  }
+  function _tabMenuAway(e) { const m = document.getElementById('tab-menu'); if (m && !m.contains(e.target)) closeTabMenuNow(); }
+  function _tabMenuKey(e) { if (e.key === 'Escape') closeTabMenuNow(); }
+  function openTabMenu(tabId, x, y) {
+    closeTabMenuNow();
+    const idx = openTabs.findIndex(t => t.id === tabId);
+    if (idx < 0) return;
+    const ids = openTabs.map(t => t.id);
+    const items = [
+      ['Close', openTabs.length > 1, () => closeTab(tabId)],
+      ['Close others', openTabs.length > 1, () => closeTabsBulk(ids.filter(i => i !== tabId), tabId)],
+      ['Close to the right', idx < openTabs.length - 1, () => closeTabsBulk(ids.slice(idx + 1), tabId)],
+      ['Close to the left', idx > 0, () => closeTabsBulk(ids.slice(0, idx), tabId)],
+      null,
+      ['Close all', true, () => closeTabsBulk(ids)]
+    ];
+    const menu = document.createElement('div');
+    menu.id = 'tab-menu';
+    menu.className = 'tab-menu';
+    menu.setAttribute('role', 'menu');
+    items.forEach(it => {
+      if (!it) { menu.appendChild(document.createElement('hr')); return; }
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('role', 'menuitem');
+      b.textContent = it[0];
+      b.disabled = !it[1];
+      b.onclick = () => { closeTabMenuNow(); it[2](); };
+      menu.appendChild(b);
+    });
+    document.body.appendChild(menu);
+    const r = menu.getBoundingClientRect();
+    menu.style.left = Math.max(4, Math.min(x, window.innerWidth - r.width - 4)) + 'px';
+    menu.style.top = Math.max(4, Math.min(y, window.innerHeight - r.height - 4)) + 'px';
+    document.addEventListener('mousedown', _tabMenuAway, true);
+    document.addEventListener('keydown', _tabMenuKey, true);
+    window.addEventListener('blur', closeTabMenuNow);
+  }
+  function openTabMenuFromButton(btn) {
+    if (!activeTabId) return;
+    const r = btn.getBoundingClientRect();
+    openTabMenu(activeTabId, r.left, r.bottom + 2);
+  }
+  function newTab() {
+    const col = state.collections.find(c => c.id === state.activeCollectionId) || state.collections[0];
+    if (col) newRequestInCollection(col.id);
+  }
+  function pruneTabs() {
+    const before = openTabs.length;
+    openTabs = openTabs.filter(t => findReq(t.colId, t.reqId));
+    if (openTabs.length === before) return;
+    if (!getTab(activeTabId)) {
+      activeTabId = null;
+      const n = openTabs[openTabs.length - 1];
+      if (n) activateTab(n.id);
+      else {
+        const c = state.collections.find(x => x.requests.length);
+        if (c) openRequestTab(c.id, c.requests[0].id); else renderTabs();
+      }
+    } else { renderTabs(); persistTabs(); }
+  }
+  function restoreTabs() {
+    const saved = (state.openTabs || []).filter(t => findReq(t.colId, t.reqId));
+    openTabs = saved.map(t => ({ id: t.id, colId: t.colId, reqId: t.reqId, draft: null, response: null, dirty: false }));
+    if (!openTabs.length) {
+      const c = state.collections.find(x => x.requests.length);
+      if (c) openRequestTab(c.id, c.requests[0].id);
+      return;
+    }
+    const t = getTab(state.activeTabId) || openTabs[0];
+    activeTabId = t.id;
+    const req = findReq(t.colId, t.reqId);
+    state.activeCollectionId = t.colId;
+    state.activeRequestId = t.reqId;
+    state.currentRequest = req;
+    applyRequest(req);
+    resetResponse();
+    renderTabs();
+    renderCollections();
+  }
+
+  function collectCurrentRequestData() {
+    return {
+      name: document.getElementById('req-name').value.trim() || 'Untitled',
+      method: document.getElementById('req-method').value,
+      url: document.getElementById('req-url').value,
+      params: getKvRows('params'),
+      headers: getKvRows('headers'),
+      bodyType,
+      body: {
+        raw: getEditorValue('raw-body'),
+        rawLang: document.getElementById('raw-lang').value,
+        urlencoded: getKvRows('urlencoded'),
+        formdata: getFormDataRows().map(r => ({ key: r.key, type: r.type, value: r.type === 'text' ? r.value : '', enabled: r.enabled })),
+        graphqlQuery: document.getElementById('gql-query').value,
+        graphqlVars: document.getElementById('gql-vars').value
+      },
+      preRequest: getEditorValue('prerequest-script'),
+      tests: getEditorValue('tests-script')
+    };
+  }
+
+  function saveCurrentRequest() {
+    if (state.activeRequestId && state.activeCollectionId) {
+      const col = state.collections.find(c => c.id === state.activeCollectionId);
+      const req = col && col.requests.find(r => r.id === state.activeRequestId);
+      if (req) {
+        Object.assign(req, collectCurrentRequestData());
+        document.getElementById('req-name').value = req.name;
+        saveState();
+        renderCollections();
+        const tb = activeTab(); if (tb) { tb.dirty = false; tb.draft = null; }
+        renderTabs();
+        showToast('Request saved', 'success');
+        return;
+      }
+    }
+    openSaveRequestModal();
+  }
+
+  function openSaveRequestModal() {
+    const sel = document.getElementById('request-collection');
+    sel.innerHTML = '';
+    state.collections.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
+      if (c.id === state.activeCollectionId) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    document.getElementById('request-name').value = '';
+    openModal('modal-request');
+  }
+
+  function confirmSaveRequest() {
+    const name = document.getElementById('request-name').value.trim()
+      || document.getElementById('req-name').value.trim()
+      || 'Untitled';
+    const colId = document.getElementById('request-collection').value;
+    const col = state.collections.find(c => c.id === colId);
+    if (!col) return;
+    const data = collectCurrentRequestData();
+    data.name = name;
+    const req = { id: uid(), ...data };
+    col.requests.push(req);
+    state.activeCollectionId = colId;
+    state.activeRequestId = req.id;
+    saveState();
+    renderCollections();
+    closeModal('modal-request');
+  }
+
+  // Requests opened from History / Saved responses live in a "Temp" collection,
+  // so they don't clutter your real collections.
+  function getTempCollection() {
+    let col = state.collections.find(c => c.temp);
+    if (!col) {
+      col = { id: uid(), name: 'Temp', description: 'Opened from History / Saved responses', temp: true, requests: [] };
+      state.collections.push(col);
+    }
+    return col;
+  }
+
+  // Open a stored request (and optionally its response) as a brand-new tab,
+  // leaving every existing tab untouched.
+  function openSnapshotInNewTab(snapshot, response, fallback) {
+    const col = getTempCollection();
+    fallback = fallback || {};
+    const base = { params: [], headers: [], bodyType: 'none', body: {}, preRequest: '', tests: '' };
+    const src = snapshot ? JSON.parse(JSON.stringify(snapshot)) : { method: fallback.method || 'GET', url: fallback.url || '' };
+    const req = Object.assign(base, src, {
+      id: uid(),
+      name: fallback.name || src.name || ((src.method || 'GET') + ' ' + String(src.url || '').slice(0, 50))
+    });
+    col.requests.push(req);
+    saveState();
+    openRequestTab(col.id, req.id);
+    const t = activeTab();
+    if (t && response) { t.response = response; showTabResponse(t); }
+  }
+
+  function newRequestInCollection(colId) {
+    const col = state.collections.find(c => c.id === colId);
+    if (!col) return;
+    const req = {
+      id: uid(),
+      name: 'New Request',
+      method: 'GET',
+      url: '{{baseUrl}}/',
+      params: [],
+      headers: [],
+      bodyType: 'none',
+      body: {},
+      preRequest: '',
+      tests: ''
+    };
+    col.requests.push(req);
+    saveState();
+    loadRequest(colId, req.id);
+  }
+
+  /* =========================================================================
+     Collections modal
+     ========================================================================= */
+  let editingCollectionId = null;
+  function openNewCollectionModal() {
+    editingCollectionId = null;
+    document.getElementById('collection-modal-title').textContent = 'New collection';
+    document.getElementById('collection-name').value = '';
+    document.getElementById('collection-desc').value = '';
+    openModal('modal-collection');
+  }
+  function saveCollection() {
+    const name = document.getElementById('collection-name').value.trim() || 'Untitled';
+    const description = document.getElementById('collection-desc').value;
+    if (editingCollectionId) {
+      const c = state.collections.find(x => x.id === editingCollectionId);
+      if (c) { c.name = name; c.description = description; }
+    } else {
+      state.collections.push({ id: uid(), name, description, requests: [] });
+    }
+    saveState();
+    renderCollections();
+    closeModal('modal-collection');
+  }
+
+  /* =========================================================================
+     Environments
+     ========================================================================= */
+  function openEnvModal(preferId) {
+    const sel = document.getElementById('env-select');
+    sel.innerHTML = '';
+    if (!state.environments.length) {
+      const id = uid();
+      state.environments.push({ id, name: 'New Environment', values: [{ key: 'baseUrl', value: '', enabled: true }] });
+      state.activeEnvId = id;
+      saveState();
+    }
+    const focusId = preferId || state.activeEnvId || state.environments[0].id;
+    state.environments.forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e.id;
+      opt.textContent = e.name;
+      if (e.id === focusId) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    loadEnvEditor(focusId);
+    openModal('modal-env');
+    renderEnvironments();
+  }
+
+  function loadEnvEditor(envId) {
+    const env = state.environments.find(e => e.id === envId);
+    if (!env) {
+      document.getElementById('env-name').value = '';
+      document.querySelector('#env-vars-table tbody').innerHTML = '';
+      addEnvVarRow();
+      return;
+    }
+    document.getElementById('env-name').value = env.name || '';
+    const tbody = document.querySelector('#env-vars-table tbody');
+    tbody.innerHTML = '';
+    const vals = env.values || [];
+    if (vals.length) vals.forEach(v => addEnvVarRow(v));
+    else addEnvVarRow();
+  }
+
+  function addEnvVarRow(data) {
+    data = data || { key: '', value: '', enabled: true };
+    const tbody = document.querySelector('#env-vars-table tbody');
+    if (!tbody) return;
+    const tr = document.createElement('tr');
+    const tdCheck = document.createElement('td');
+    tdCheck.className = 'kv-check';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = data.enabled !== false;
+    tdCheck.appendChild(cb);
+
+    const tdKey = document.createElement('td');
+    const inKey = document.createElement('input');
+    inKey.className = 'input';
+    inKey.placeholder = 'variable';
+    inKey.value = data.key != null ? String(data.key) : '';
+    tdKey.appendChild(inKey);
+
+    const tdInit = document.createElement('td');
+    const inInit = document.createElement('input');
+    inInit.className = 'input';
+    inInit.placeholder = 'initial';
+    inInit.value = data.value != null ? String(data.value) : '';
+    tdInit.appendChild(inInit);
+
+    const tdCur = document.createElement('td');
+    const inCur = document.createElement('input');
+    inCur.className = 'input';
+    inCur.placeholder = 'current';
+    inCur.value = data.value != null ? String(data.value) : '';
+    tdCur.appendChild(inCur);
+
+    const tdDel = document.createElement('td');
+    tdDel.className = 'kv-del';
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'icon-btn';
+    delBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+    delBtn.onclick = () => tr.remove();
+    tdDel.appendChild(delBtn);
+
+    tr.append(tdCheck, tdKey, tdInit, tdCur, tdDel);
+    tbody.appendChild(tr);
+  }
+
+  function saveEnvFromEditor() {
+    const envId = document.getElementById('env-select').value;
+    let env = state.environments.find(e => e.id === envId);
+    if (!env) {
+      // create if missing
+      env = { id: envId || uid(), name: 'Untitled', values: [] };
+      state.environments.push(env);
+      document.getElementById('env-select').value = env.id;
+    }
+    env.name = (document.getElementById('env-name').value || '').trim() || 'Untitled';
+    env.values = [];
+    document.querySelectorAll('#env-vars-table tbody tr').forEach(tr => {
+      const cells = tr.querySelectorAll('td');
+      if (cells.length < 4) return;
+      const enabled = cells[0].querySelector('input') ? cells[0].querySelector('input').checked : true;
+      const keyEl = cells[1].querySelector('input');
+      const curEl = cells[3].querySelector('input') || cells[2].querySelector('input');
+      const key = keyEl ? keyEl.value.trim() : '';
+      const value = curEl ? curEl.value : '';
+      if (key) env.values.push({ key, value, enabled });
+    });
+    state.activeEnvId = env.id;
+    saveState();
+    // refresh select label
+    const sel = document.getElementById('env-select');
+    const opt = sel.querySelector('option[value="' + env.id + '"]');
+    if (opt) opt.textContent = env.name;
+    renderEnvironments();
+    showToast('Environment "' + env.name + '" saved', 'success');
+  }
+
+  function createNewEnv() {
+    const id = uid();
+    const env = {
+      id,
+      name: 'New Environment',
+      values: [
+        { key: 'baseUrl', value: 'https://', enabled: true },
+        { key: 'token', value: '', enabled: true }
+      ]
+    };
+    state.environments.push(env);
+    state.activeEnvId = id;
+    saveState();
+    renderEnvironments();
+    openEnvModal(id);
+    showToast('Environment created — edit and Save', 'success');
+  }
+
+  async function deleteCurrentEnv() {
+    const envId = document.getElementById('env-select').value;
+    if (!envId) return;
+    const env = state.environments.find(e => e.id === envId);
+    if (!(await uiConfirm('Delete environment "' + (env ? env.name : envId) + '"?'))) return;
+    state.environments = state.environments.filter(e => e.id !== envId);
+    if (state.activeEnvId === envId) {
+      state.activeEnvId = state.environments[0] ? state.environments[0].id : null;
+    }
+    saveState();
+    renderEnvironments();
+    if (state.environments.length) openEnvModal(state.activeEnvId);
+    else {
+      document.querySelector('#env-vars-table tbody').innerHTML = '';
+      document.getElementById('env-name').value = '';
+      document.getElementById('env-select').innerHTML = '';
+      closeModal('modal-env');
+    }
+    showToast('Environment deleted', 'success');
+  }
+
+  /* =========================================================================
+     Import / Export (Postman-compatible)
+     ========================================================================= */
+  function openImportModal() { openModal('modal-import'); }
+  function openExportModal() {
+    const colSel = document.getElementById('export-collection');
+    const envSel = document.getElementById('export-env');
+    colSel.innerHTML = '';
+    envSel.innerHTML = '';
+    state.collections.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c.id; o.textContent = c.name; colSel.appendChild(o);
+    });
+    state.environments.forEach(e => {
+      const o = document.createElement('option');
+      o.value = e.id; o.textContent = e.name; envSel.appendChild(o);
+    });
+    document.getElementById('export-type').onchange = () => {
+      const t = document.getElementById('export-type').value;
+      document.getElementById('export-collection-wrap').style.display = t === 'collection' || t === 'all' ? '' : 'none';
+      document.getElementById('export-env-wrap').style.display = t === 'environment' ? '' : 'none';
+    };
+    document.getElementById('export-type').onchange();
+    openModal('modal-export');
+  }
+
+  function doImport() {
+    const file = document.getElementById('import-file').files[0];
+    if (!file) { notify('Choose a file'); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (data.info && data.item) {
+          // Postman Collection v2.1
+          importPostmanCollection(data);
+        } else if (data.values && (data.name || data.id)) {
+          // Postman Environment
+          importPostmanEnvironment(data);
+        } else if (data.collections || data.environments) {
+          // CipherDeck backup
+          if (data.collections) state.collections = data.collections;
+          if (data.environments) state.environments = data.environments;
+          if (data.activeEnvId) state.activeEnvId = data.activeEnvId;
+          saveState();
+          renderCollections();
+          renderEnvironments();
+          notify('Backup imported.');
+        } else {
+          notify('Unrecognized format. Expect Postman Collection v2.1, Environment, or CipherDeck backup.');
+        }
+        closeModal('modal-import');
+      } catch (e) {
+        notify('Import failed: ' + e.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function importPostmanCollection(data) {
+    const col = {
+      id: uid(),
+      name: (data.info && data.info.name) || 'Imported',
+      description: (data.info && data.info.description) || '',
+      requests: []
+    };
+    function walk(items) {
+      (items || []).forEach(item => {
+        if (item.item) walk(item.item);
+        else if (item.request) {
+          const r = item.request;
+          const method = (typeof r.method === 'string' ? r.method : 'GET').toUpperCase();
+          let url = '';
+          if (typeof r.url === 'string') url = r.url;
+          else if (r.url && r.url.raw) url = r.url.raw;
+          else if (r.url && r.url.host) {
+            url = (r.url.protocol || 'https') + '://' + [].concat(r.url.host).join('.');
+            if (r.url.path) url += '/' + [].concat(r.url.path).join('/');
+          }
+          const headers = (r.header || []).map(h => ({ key: h.key, value: h.value, enabled: !h.disabled }));
+          let bodyType = 'none';
+          let body = {};
+          if (r.body) {
+            if (r.body.mode === 'raw') {
+              bodyType = 'raw';
+              body.raw = r.body.raw || '';
+              body.rawLang = (r.body.options && r.body.options.raw && r.body.options.raw.language) || 'json';
+            } else if (r.body.mode === 'urlencoded') {
+              bodyType = 'urlencoded';
+              body.urlencoded = (r.body.urlencoded || []).map(u => ({ key: u.key, value: u.value, enabled: !u.disabled }));
+            } else if (r.body.mode === 'formdata') {
+              bodyType = 'form-data';
+              body.formdata = (r.body.formdata || []).map(u => ({ key: u.key, value: u.value || '', type: u.type === 'file' ? 'file' : 'text', enabled: !u.disabled }));
+            } else if (r.body.mode === 'graphql') {
+              bodyType = 'graphql';
+              body.graphqlQuery = (r.body.graphql && r.body.graphql.query) || '';
+              body.graphqlVars = (r.body.graphql && r.body.graphql.variables) || '';
+            }
+          }
+          const events = item.event || [];
+          let preRequest = '', tests = '';
+          events.forEach(ev => {
+            if (ev.listen === 'prerequest' && ev.script && ev.script.exec) preRequest = [].concat(ev.script.exec).join('\n');
+            if (ev.listen === 'test' && ev.script && ev.script.exec) tests = [].concat(ev.script.exec).join('\n');
+          });
+          col.requests.push({
+            id: uid(),
+            name: item.name || method + ' ' + url.slice(0, 30),
+            method, url, headers, params: [],
+            bodyType, body, preRequest, tests
+          });
+        }
+      });
+    }
+    walk(data.item);
+    state.collections.push(col);
+    saveState();
+    renderCollections();
+    notify('Imported collection "' + col.name + '" with ' + col.requests.length + ' request(s).');
+  }
+
+  function importPostmanEnvironment(data) {
+    const env = {
+      id: uid(),
+      name: data.name || 'Imported Env',
+      values: (data.values || []).map(v => ({
+        key: v.key,
+        value: v.value != null ? String(v.value) : '',
+        enabled: v.enabled !== false
+      }))
+    };
+    state.environments.push(env);
+    state.activeEnvId = env.id;
+    saveState();
+    renderEnvironments();
+    notify('Imported environment "' + env.name + '".');
+  }
+
+  function doExport() {
+    const type = document.getElementById('export-type').value;
+    let payload, filename;
+    if (type === 'collection') {
+      const col = state.collections.find(c => c.id === document.getElementById('export-collection').value);
+      if (!col) return;
+      payload = toPostmanCollection(col);
+      filename = (col.name || 'collection').replace(/\s+/g, '-') + '.postman_collection.json';
+    } else if (type === 'environment') {
+      const env = state.environments.find(e => e.id === document.getElementById('export-env').value);
+      if (!env) return;
+      payload = toPostmanEnvironment(env);
+      filename = (env.name || 'environment').replace(/\s+/g, '-') + '.postman_environment.json';
+    } else {
+      payload = {
+        collections: state.collections,
+        environments: state.environments,
+        activeEnvId: state.activeEnvId,
+        exportedAt: new Date().toISOString()
+      };
+      filename = 'cipherdeck-api-backup.json';
+    }
+    downloadJson(filename, payload);
+    closeModal('modal-export');
+  }
+
+  function toPostmanCollection(col) {
+    return {
+      info: {
+        name: col.name,
+        description: col.description || '',
+        schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
+      },
+      item: (col.requests || []).map(req => {
+        const events = [];
+        if (req.preRequest) events.push({ listen: 'prerequest', script: { type: 'text/javascript', exec: req.preRequest.split('\n') } });
+        if (req.tests) events.push({ listen: 'test', script: { type: 'text/javascript', exec: req.tests.split('\n') } });
+        const body = {};
+        if (req.bodyType === 'raw') {
+          body.mode = 'raw';
+          body.raw = (req.body && req.body.raw) || '';
+          body.options = { raw: { language: (req.body && req.body.rawLang) || 'json' } };
+        } else if (req.bodyType === 'urlencoded') {
+          body.mode = 'urlencoded';
+          body.urlencoded = ((req.body && req.body.urlencoded) || []).map(u => ({ key: u.key, value: u.value, disabled: u.enabled === false }));
+        } else if (req.bodyType === 'form-data') {
+          body.mode = 'formdata';
+          body.formdata = ((req.body && req.body.formdata) || []).map(u => ({ key: u.key, value: u.value, type: u.type || 'text', disabled: u.enabled === false }));
+        } else if (req.bodyType === 'graphql') {
+          body.mode = 'graphql';
+          body.graphql = { query: (req.body && req.body.graphqlQuery) || '', variables: (req.body && req.body.graphqlVars) || '' };
+        }
+        return {
+          name: req.name,
+          request: {
+            method: req.method,
+            header: (req.headers || []).map(h => ({ key: h.key, value: h.value, disabled: h.enabled === false })),
+            url: req.url,
+            body: Object.keys(body).length ? body : undefined
+          },
+          event: events.length ? events : undefined
+        };
+      })
+    };
+  }
+
+  function toPostmanEnvironment(env) {
+    return {
+      id: env.id,
+      name: env.name,
+      values: (env.values || []).map(v => ({
+        key: v.key,
+        value: v.value,
+        enabled: v.enabled !== false,
+        type: 'default'
+      })),
+      _postman_variable_scope: 'environment'
+    };
+  }
+
+  function downloadJson(filename, obj) {
+    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  /* =========================================================================
+     History & saved responses
+     ========================================================================= */
+  function openHistoryModal() {
+    const list = document.getElementById('history-list');
+    list.innerHTML = '';
+    if (!state.history.length) {
+      list.innerHTML = '<div class="empty-state"><h3>No history yet</h3><p>Send a request to see it here.</p></div>';
+    } else {
+      state.history.forEach(h => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `<span class="method method-${(h.method||'').toLowerCase()}">${esc(h.method)}</span>
+          <span class="name mono" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(h.url)}</span>
+          <span class="badge ${h.status < 400 ? 'success' : 'danger'}">${h.status}</span>
+          <span class="time">${new Date(h.at).toLocaleString()}</span>`;
+        div.title = 'Open in a new tab';
+        div.onclick = () => {
+          closeModal('modal-history');
+          openSnapshotInNewTab(h.request, null, { method: h.method, url: h.url });
+        };
+        list.appendChild(div);
+      });
+    }
+    openModal('modal-history');
+  }
+
+  function clearHistory() {
+    state.history = [];
+    saveState();
+    openHistoryModal();
+  }
+
+  function openSavedResponsesModal() {
+    const search = document.getElementById('saved-search');
+    if (search) search.value = '';
+    renderSavedResponses();
+    openModal('modal-saved');
+    if (search) setTimeout(() => search.focus(), 50);
+  }
+
+  function renderSavedResponses() {
+    const list = document.getElementById('saved-list');
+    const countEl = document.getElementById('saved-count');
+    const q = ((document.getElementById('saved-search') || {}).value || '').trim().toLowerCase();
+    list.innerHTML = '';
+    const total = state.savedResponses.length;
+
+    if (!total) {
+      countEl.textContent = '';
+      list.innerHTML = '<div class="empty-state"><h3>No saved responses</h3><p>Use “Store” on a response to save it here.</p></div>';
+      return;
+    }
+
+    const terms = q.split(/\s+/).filter(Boolean);
+    const matches = s => {
+      if (!terms.length) return true;
+      const hay = [s.name, s.url, s.method, s.status, s.statusText, s.bodyText]
+        .map(v => String(v == null ? '' : v)).join('\n').toLowerCase();
+      return terms.every(t => hay.includes(t));
+    };
+    const shown = state.savedResponses.filter(matches);
+    countEl.textContent = terms.length ? (shown.length + ' of ' + total) : (total + ' saved');
+
+    if (!shown.length) {
+      list.innerHTML = '<div class="empty-state"><h3>No matches</h3><p>No saved response matches “' + esc(q) + '”.</p></div>';
+      return;
+    }
+
+    shown.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      const bodyOnly = terms.length && !terms.every(t =>
+        [s.name, s.url, s.method, s.status, s.statusText].map(v => String(v == null ? '' : v)).join('\n').toLowerCase().includes(t));
+      div.innerHTML = `<span class="method method-${(s.method||'').toLowerCase()}">${esc(s.method)}</span>
+        <span style="flex:1;min-width:0;"><strong>${esc(s.name)}</strong>${bodyOnly ? ' <span class="badge" style="font-size:10px;">match in body</span>' : ''}<br><span class="mono" style="font-size:11px;color:var(--t-muted);">${esc(s.url)}</span></span>
+        <span class="badge ${s.status < 400 ? 'success' : 'danger'}">${s.status}</span>
+        <button class="btn btn--ghost btn--sm" data-id="${s.id}">Load</button>
+        <button class="icon-btn" data-del="${s.id}"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>`;
+      div.querySelector('[data-id]').onclick = (e) => {
+        e.stopPropagation();
+        const res = { status: s.status, statusText: s.statusText || '', headers: s.headers || {}, bodyText: s.bodyText, time: s.time || 0, size: (s.bodyText || '').length, url: s.url, method: s.method };
+        closeModal('modal-saved');
+        openSnapshotInNewTab(s.request, res, { method: s.method, url: s.url, name: s.name });
+      };
+      div.querySelector('[data-del]').onclick = (e) => {
+        e.stopPropagation();
+        state.savedResponses = state.savedResponses.filter(x => x.id !== s.id);
+        saveState();
+        renderSavedResponses();
+      };
+      list.appendChild(div);
+    });
+  }
+
+  /* =========================================================================
+     Modals
+     ========================================================================= */
+
+  /* =========================================================================
+     Storage location dialog
+     ========================================================================= */
+  function openStorageModal() {
+    document.getElementById('storage-path').textContent = IS_DESKTOP
+      ? (currentDataFile || 'Loading\u2026')
+      : (IS_TAURI ? (currentDataFile || 'Local data file') : 'Browser localStorage');
+    document.getElementById('storage-actions').style.display = IS_DESKTOP ? 'flex' : 'none';
+    document.getElementById('storage-help').style.display = IS_DESKTOP ? '' : 'none';
+    openModal('modal-storage');
+  }
+  function revealStorage() { hostCall('revealDataFile', {}).catch(() => {}); }
+  async function reloadStateFromFile() {
+    const r = await hostCall('stateLoad', {});
+    if (!r.data) return;
+    state = { ...state, ...r.data };
+    state.collections = state.collections || [];
+    state.environments = state.environments || [];
+    state.history = state.history || [];
+    state.savedResponses = state.savedResponses || [];
+    openTabs = []; activeTabId = null;
+    renderCollections();
+    renderEnvironments();
+    restoreTabs();
+  }
+  async function changeStorage(reset) {
+    try {
+      saveStateNow();
+      await _saveChain;
+      let path = null;
+      if (!reset && IS_TAURI) {
+        path = await tauriInvoke('pick_folder');
+        if (!path) return; // cancelled
+      }
+      const r = await hostCall('storageSet', { reset: !!reset, data: snapshotState(), path: path }, 300000);
+      if (r.cancelled) return;
+      setStorageBadge(r.file);
+      document.getElementById('storage-path').textContent = r.file;
+      if (r.existed) {
+        await reloadStateFromFile();
+        showToast('Loaded existing data from the new location', 'success');
+      } else {
+        showToast('Data copied to the new location', 'success');
+      }
+    } catch (e) {
+      showToast('Could not change location: ' + (e.message || e), 'danger');
+    }
+  }
+
+  /* =========================================================================
+     Sample API (AES-256/128 CBC encrypted request + response)
+     ========================================================================= */
+  const SAMPLE_PRE = `const key = CryptoJS.enc.Base64.parse("Vre+NfqHVsRFTSUxs4WiCQ==");
+const iv = CryptoJS.enc.Base64.parse("zDs0Ll70c07FURefhad/pQ==");
+
+// Plain JSON text from the Body tab
+const plainText = pm.request.body.raw;
+console.log("Original request:");
+console.log(plainText);
+
+const encrypted = CryptoJS.AES.encrypt(plainText, key, {
+  iv: iv,
+  mode: CryptoJS.mode.CBC,
+  padding: CryptoJS.pad.Pkcs7
+});
+
+const encryptedText = encrypted.ciphertext.toString(CryptoJS.enc.Base64);
+console.log("Encrypted request:");
+console.log(encryptedText);
+
+// Replace request body
+pm.request.body.raw = encryptedText;`;
+
+  const SAMPLE_DECRYPT_FN = `const key = CryptoJS.enc.Base64.parse("Vre+NfqHVsRFTSUxs4WiCQ==");
+const iv = CryptoJS.enc.Base64.parse("zDs0Ll70c07FURefhad/pQ==");
+
+function aesDecrypt(base64Text) {
+  const decrypted = CryptoJS.AES.decrypt(
+    CryptoJS.lib.CipherParams.create({ ciphertext: CryptoJS.enc.Base64.parse(base64Text) }),
+    key,
+    { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }
+  );
+  return decrypted.toString(CryptoJS.enc.Utf8);
+}
+`;
+
+  const SAMPLE_POST_LOGIN = `const response = pm.response.json();
+
+if (response?.data?.accessToken && response?.data?.refreshToken) {
+  pm.environment.set("accessToken", response.data.accessToken);
+  pm.environment.set("refreshToken", response.data.refreshToken);
+
+  console.log("SUCCESS: Tokens saved");
+  console.log("accessToken:", response.data.accessToken);
+  console.log("refreshToken:", response.data.refreshToken);
+} else {
+  console.error("FAIL: Tokens not found", response);
+}`;
+
+  const SAMPLE_POST_DEMO = SAMPLE_DECRYPT_FN + `
+try {
+  // httpbin.org/anything echoes our encrypted request body in the "data" field,
+  // so it plays the role of an API that returns an encrypted response.
+  const encryptedResponse = pm.response.json().data;
+  console.log("Encrypted response:");
+  console.log(encryptedResponse);
+
+  const decryptedText = aesDecrypt(encryptedResponse);
+  console.log("Decrypted response:");
+  console.log(decryptedText);
+
+  pm.response.setBody(JSON.stringify(JSON.parse(decryptedText), null, 2));
+} catch (error) {
+  console.error("AES response decryption failed:", error);
+}`;
+
+  function loadSampleApi() {
+    const COL = 'Sample - Encrypted API';
+    const ENV = 'Sample Encrypted';
+    state.collections = state.collections.filter(c => c.name !== COL);
+    state.environments = state.environments.filter(e => e.name !== ENV);
+    const jsonHeaders = () => [
+      { key: 'Accept', value: 'application/json', enabled: true },
+      { key: 'Content-Type', value: 'application/json', enabled: true }
+    ];
+    const col = {
+      id: uid(),
+      name: COL,
+      description: 'AES-CBC encrypted request and response with pre-request / post-response scripts',
+      requests: [
+        {
+          id: uid(), name: 'Encryption Demo', method: 'POST',
+          url: 'https://httpbin.org/anything', params: [], headers: jsonHeaders(),
+          bodyType: 'raw',
+          body: { raw: '{\n  "username": "demo",\n  "password": "secret123"\n}', rawLang: 'json' },
+          preRequest: SAMPLE_PRE, tests: SAMPLE_POST_DEMO
+        },
+        {
+          id: uid(), name: 'Login API', method: 'POST',
+          url: 'https://httpbin.org/anything', params: [], headers: jsonHeaders(),
+          bodyType: 'raw',
+          body: { raw: '{\n  "username": "admin",\n  "password": "password"\n}', rawLang: 'json' },
+          preRequest: '', tests: SAMPLE_POST_LOGIN
+        }
+      ]
+    };
+    const env = {
+      id: uid(), name: ENV,
+      values: [
+        { key: 'baseUrl', value: 'http://localhost:5000', enabled: true },
+        { key: 'accessToken', value: '', enabled: true },
+        { key: 'refreshToken', value: '', enabled: true }
+      ]
+    };
+    state.collections.push(col);
+    state.environments.push(env);
+    state.activeEnvId = env.id;
+    if (state.collapsedCollections) delete state.collapsedCollections[col.id];
+    saveState();
+    renderCollections();
+    renderEnvironments();
+    openRequestTab(col.id, col.requests[0].id);
+    showToast('Sample API loaded - press Send on the demo request', 'success');
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('is-open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('is-open'); }
+  document.querySelectorAll('.modal-overlay').forEach(ov => {
+    ov.addEventListener('click', (e) => { if (e.target === ov) ov.classList.remove('is-open'); });
+  });
+
+
+  // Production safety: never leave an invisible overlay blocking clicks
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      document.querySelectorAll('.modal-overlay.is-open').forEach(el => el.classList.remove('is-open'));
+      const bd = document.getElementById('response-fs-backdrop');
+      if (bd) bd.classList.remove('is-visible');
+      const res = document.getElementById('response-area');
+      if (res) { res.classList.remove('is-fullscreen', 'is-floating'); }
+    } catch (e) {}
+  });
+
+  /* =========================================================================
+     Init
+     ========================================================================= */
+  if (IS_DESKTOP) {
+    document.body.classList.add('is-vscode');
+    const badge = document.createElement('span');
+    badge.className = 'vscode-badge';
+    badge.textContent = 'Desktop · no CORS';
+    const top = document.querySelector('.topbar');
+    if (top) top.appendChild(badge);
+  }
+  setKvRows('params', []);
+  setKvRows('headers', [{ key: 'Accept', value: 'application/json', enabled: true }]);
+  setKvRows('urlencoded', []);
+  addFormDataRow();
+
+  // Load saved state (from the data file in VS Code), then render and restore tabs
+  loadState().then(() => {
+    renderCollections();
+    renderEnvironments();
+    restoreTabs();
+    setTimeout(initCodeMirrors, 50);
+  });
+
+  // Responsive sidebar
+  function checkMobile() {
+    const openBtn = document.getElementById('btn-open-sidebar');
+    const closeBtn = document.getElementById('btn-close-sidebar');
+    if (window.innerWidth <= 900) {
+      openBtn.style.display = '';
+      closeBtn.style.display = '';
+    } else {
+      openBtn.style.display = 'none';
+      closeBtn.style.display = 'none';
+      document.getElementById('sidebar').classList.remove('is-open');
+    }
+  }
+  checkMobile();
+  window.addEventListener('resize', checkMobile);
+
+  // Mark the open tab as edited; Ctrl+S saves
+  (function () {
+    const onEdit = (e) => {
+      if (!e.target.closest || !e.target.closest('.request-bar, #req-body-pane')) return;
+      markDirty();
+      if (e.target.id === 'req-method') renderTabs();
+    };
+    document.addEventListener('input', onEdit, true);
+    document.addEventListener('change', onEdit, true);
+    document.addEventListener('click', (e) => {
+      const b = e.target.closest && e.target.closest('#req-body-pane button, #req-body-pane .tab');
+      if (b) markDirty();
+    }, true);
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveCurrentRequest(); }
+    });
+  })();
+
+  // Tab strip: scrollbar is hidden, so scroll sideways with the mouse wheel
+  (function () {
+    const list = document.getElementById('tabstrip-list');
+    if (!list) return;
+    list.addEventListener('wheel', (e) => {
+      if (list.scrollWidth <= list.clientWidth) return;
+      const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      list.scrollLeft += d;
+      e.preventDefault();
+    }, { passive: false });
+  })();
+
+  // Ctrl+Enter to send
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      sendRequest();
+    }
+  });
+  </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+[package]
+name = "api-workbench"
+version = "1.0.0"
+description = "CipherDeck API Workbench — desktop app (Windows, macOS, Linux)"
+authors = ["SurajPrasad"]
+license = "MIT"
+repository = "https://github.com/SurajPrasadd/apiworkbench"
+edition = "2021"
+rust-version = "1.70"
+
+[build-dependencies]
+tauri-build = { version = "1.5", features = [] }
+
+[dependencies]
+tauri = { version = "1.6", features = [ "window-hide", "window-close", "window-maximize", "window-set-size", "window-start-dragging", "dialog-all", "window-minimize", "window-unminimize", "window-set-title", "window-unmaximize", "window-show", "shell-open", "fs-all", "path-all"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.11", default-features = false, features = ["json", "multipart", "rustls-tls", "blocking"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+base64 = "0.21"
+dirs = "5"
+open = "5"
+thiserror = "1"
+url = "2"
+mime_guess = "2"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
