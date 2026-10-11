@@ -4,10 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>API Workbench</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css" />
@@ -17,11 +13,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
   <style>
     .CodeMirror {
       border: 1px solid var(--border);
       border-radius: 8px;
-      font-family: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
       font-size: 12.5px;
       height: auto;
       min-height: 160px;
@@ -192,11 +189,14 @@
       font-weight: 600;
     }
     body.is-vscode .vscode-badge { display: inline-flex; }
+    /* Desktop (Tauri) polish: app-like feel on Windows / macOS / Linux */
+    body.is-tauri { -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
+    body.is-tauri .btn, body.is-tauri .icon-btn, body.is-tauri .sidebar-item, body.is-tauri .tab {
+      -webkit-user-select: none; user-select: none;
+    }
     
   </style>
   <style>
-    @import url(https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap);
-
     :root[data-theme=light] {
       --bg-body: #f0f4f8;
       --bg-card: #fff;
@@ -287,22 +287,19 @@
     body {
       background: var(--bg-body);
       color: var(--t-base);
-      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: Inter, system-ui, Segoe UI, Ubuntu, Cantarell, Noto Sans, -apple-system, Roboto, sans-serif;
       font-size: 14px;
       font-weight: 400;
-      letter-spacing: 0.01em;
+      letter-spacing: -.003em;
       line-height: 1.55;
       -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      text-rendering: optimizeLegibility;
-      font-feature-settings: "kern" 1, "liga" 1;
       transition: background-color .28s ease, color .28s ease;
       height: 100vh;
       overflow: hidden;
     }
 
     ::selection { background: var(--primary); color: #fff }
-    .mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace }
+    .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace }
     .eyebrow {
       color: var(--t-light);
       font-family: "JetBrains Mono", monospace;
@@ -479,7 +476,7 @@
       gap: 8px;
     }
     .sidebar-brand {
-      font-family: "Inter Tight", "Inter", system-ui, sans-serif;
+      font-family: "Inter Tight", Inter, sans-serif;
       font-size: 15px;
       font-weight: 700;
       letter-spacing: -.02em;
@@ -827,7 +824,7 @@
     }
     .response-body textarea:focus { box-shadow: none }
 
-    /* Tree view (from CipherDeck) */
+    /* Tree view (from API Workbench) */
     .jt-tree {
       font-family: "JetBrains Mono", monospace;
       font-size: 12.5px;
@@ -916,7 +913,7 @@
       margin-bottom: 18px;
     }
     .modal-title {
-      font-family: "Inter Tight", "Inter", system-ui, sans-serif;
+      font-family: "Inter Tight", Inter, sans-serif;
       font-size: 18px;
       font-weight: 700;
       margin: 0;
@@ -957,7 +954,7 @@
       color: var(--t-muted);
     }
     .empty-state h3 {
-      font-family: "Inter Tight", "Inter", system-ui, sans-serif;
+      font-family: "Inter Tight", sans-serif;
       font-size: 16px;
       color: var(--t-base);
       margin: 0 0 8px;
@@ -1012,7 +1009,7 @@
 
     /* JSON syntax highlight */
     .json-pretty {
-      font-family: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+      font-family: "JetBrains Mono", ui-monospace, monospace;
       font-size: 12.5px;
       line-height: 1.65;
       white-space: pre;
@@ -1049,7 +1046,7 @@
       --success: #3fb950; --warning: #d29922; --danger: #f85149; --info: #4493f8; --purple: #ab7df8; --teal: #39c5cf; --orange: #db6d28;
       --success-soft: rgba(46,160,67,.15); --warning-soft: rgba(187,128,9,.15); --danger-soft: rgba(248,81,73,.12); --info-soft: rgba(56,139,253,.12);
     }
-    body { font-size: 13.5px; letter-spacing: 0.01em; line-height: 1.55; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { font-size: 13px; letter-spacing: 0; line-height: 1.5; }
     .eyebrow { letter-spacing: .08em; }
 
     /* Layout chrome */
@@ -1112,7 +1109,7 @@
 
     /* Inside VS Code: keep the editor font, but the Light/Dark switch controls the colours
        (the default follows the editor theme on first run, see initTheme). */
-    body.is-vscode { font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 13.5px; -webkit-font-smoothing: antialiased; }
+    body.is-vscode { font-family: var(--vscode-font-family), Inter, sans-serif; font-size: var(--vscode-font-size, 13px); }
     .vscode-badge { margin-left: 4px; border-radius: 4px; }
   </style>
   <style>
@@ -1138,6 +1135,19 @@
     #btn-new-tab { align-self: center; margin: 0 6px; flex-shrink: 0; }
     .btn:disabled { opacity: .65; cursor: progress; }
     @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+    .console-toggle { display:inline-flex; align-items:center; gap:6px; padding:3px 6px; border-radius:6px;
+      color:var(--t-muted); font:500 10px "JetBrains Mono",monospace; letter-spacing:.08em; text-transform:uppercase; }
+    .console-toggle:hover { background:var(--bg-hover); color:var(--t-base); }
+    .console-toggle .chev { display:inline-block; transition:transform .12s; }
+    .console-toggle[aria-expanded=true] .chev { transform:rotate(90deg); }
+    .console-box[hidden] { display:none; }
+    .console-box { margin-top:6px; }
+    /* Script editors fill the panel; an open console takes its space from the editor */
+    .script-editor-wrap { flex:1 1 0; min-height:120px; position:relative; }
+    .script-editor-wrap .CodeMirror { position:absolute; top:0; left:0; right:0; bottom:0; height:100% !important; min-height:0 !important; }
+    .script-editor-wrap .CodeMirror-scroll { min-height:0; max-height:none; }
+    #panel-prerequest > div:last-child, #panel-tests > div:last-child { flex:none; }
+    .sidebar-folder .folder-actions .icon-btn { width:24px; }
   </style>
 </head>
 <body>
@@ -1176,12 +1186,9 @@
           </button>
         </div>
       </div>
-      <div class="sidebar-list" id="environments-list" style="flex:0 0 auto; max-height:160px;"></div>
+      <div class="sidebar-list" id="environments-list" style="display:none;flex:0 0 auto; max-height:160px;"></div>
 
       <div class="sidebar-footer">
-        <button class="btn btn--ghost btn--sm" style="width:100%; justify-content:center;" onclick="loadSampleApi()" title="Adds a sample collection with AES-encrypted request and response scripts">
-          Load sample API
-        </button>
         <button class="btn btn--ghost btn--sm" style="width:100%; justify-content:center;" onclick="openImportModal()">
           Import
         </button>
@@ -1233,6 +1240,7 @@
         <input class="input url-input" id="req-url" type="text" placeholder="https://api.example.com/{{path}} or {{baseUrl}}/users" spellcheck="false"/>
         <button class="btn btn--primary send-btn" id="btn-send" onclick="sendRequest()">Send</button>
         <button class="btn btn--ghost" title="Save request" onclick="saveCurrentRequest()">Save</button>
+        <button class="btn btn--ghost" title="Copy as cURL" onclick="copyCurl()">cURL</button>
       </div>
       <div class="req-tabs-wrap">
         <div class="tabs" id="req-tabs">
@@ -1262,6 +1270,11 @@
               <button type="button" class="btn btn--ghost btn--sm" onclick="addHeaderPreset('Authorization','Bearer {{token}}')">Authorization</button>
               <button type="button" class="btn btn--ghost btn--sm" onclick="addHeaderPreset('X-Requested-With','XMLHttpRequest')">X-Requested-With</button>
               <button type="button" class="btn btn--ghost btn--sm" onclick="addHeaderPreset('Cache-Control','no-cache')">Cache-Control</button>
+            </div>
+            <div class="header-presets">
+              <button type="button" class="btn btn--ghost btn--sm" onclick="copyAllHeaders()" title="Copy all enabled headers to the clipboard as JSON">Copy all headers</button>
+              <button type="button" class="btn btn--ghost btn--sm" onclick="pasteHeaders(false)" title="Add headers from the clipboard (JSON, cURL -H flags or Key: Value lines)">Paste headers</button>
+              <button type="button" class="btn btn--ghost btn--sm" onclick="pasteHeaders(true)" title="Replace all current headers with the ones on the clipboard">Paste &amp; replace</button>
             </div>
             <table class="kv-table" id="headers-table">
               <thead><tr><th class="kv-check"></th><th class="kv-key">Key</th><th class="kv-value">Value</th><th class="kv-del"></th></tr></thead>
@@ -1326,19 +1339,19 @@
 
           <div class="req-panel" id="panel-prerequest">
             <p class="field-help" style="margin-bottom:8px;">Runs before send. Write your own encrypt logic; set <code>pm.request.body</code>. <code>CryptoJS</code> is available.</p>
-            <textarea class="textarea mono" id="prerequest-script" placeholder="// pm.environment.set('token', 'abc');&#10;console.log('pre-request');" style="min-height:200px; font-family:JetBrains Mono,monospace;"></textarea>
+            <div class="script-editor-wrap"><textarea class="textarea mono" id="prerequest-script" placeholder="// pm.environment.set('token', 'abc');&#10;console.log('pre-request');" style="min-height:200px; font-family:JetBrains Mono,monospace;"></textarea></div>
             <div style="margin-top:10px;">
-              <span class="eyebrow">Console</span>
-              <div class="console-box" id="prerequest-console"><div class="sc-empty">Script output appears here…</div></div>
+              <button type="button" class="console-toggle" data-console="prerequest-console" aria-expanded="false"><span class="chev">▸</span> Console <span class="badge" id="prerequest-console-count">0</span></button>
+              <div class="console-box" id="prerequest-console" hidden><div class="sc-empty">Script output appears here…</div></div>
             </div>
           </div>
 
           <div class="req-panel" id="panel-tests">
             <p class="field-help" style="margin-bottom:8px;">Runs after response. Write your own decrypt logic with <code>CryptoJS</code>; use <code>pm.response.text()</code> / <code>pm.response.json()</code> and <code>console.log</code>.</p>
-            <textarea class="textarea mono" id="tests-script" placeholder="// pm.test(&quot;Status is 200&quot;, function () {&#10;//   pm.expect(pm.response.code).to.eql(200);&#10;// });&#10;// console.log(pm.response.json());" style="min-height:200px; font-family:JetBrains Mono,monospace;"></textarea>
+            <div class="script-editor-wrap"><textarea class="textarea mono" id="tests-script" placeholder="// pm.test(&quot;Status is 200&quot;, function () {&#10;//   pm.expect(pm.response.code).to.eql(200);&#10;// });&#10;// console.log(pm.response.json());" style="min-height:200px; font-family:JetBrains Mono,monospace;"></textarea></div>
             <div style="margin-top:10px;">
-              <span class="eyebrow">Console &amp; test results</span>
-              <div class="console-box" id="tests-console"><div class="sc-empty">Post-response output appears here…</div></div>
+              <button type="button" class="console-toggle" data-console="tests-console" aria-expanded="false"><span class="chev">▸</span> Console &amp; test results <span class="badge" id="tests-console-count">0</span></button>
+              <div class="console-box" id="tests-console" hidden><div class="sc-empty">Post-response output appears here…</div></div>
             </div>
           </div>
         </div>
@@ -1463,14 +1476,42 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="modal-curl">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2 class="modal-title">Import cURL</h2>
+        <button class="icon-btn" onclick="closeModal('modal-curl')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="field" style="margin-bottom:12px;">
+        <label class="field-label">cURL command</label>
+        <textarea class="textarea mono" id="curl-input" rows="8" spellcheck="false" placeholder="curl -X POST 'https://api.example.com/login' -H 'Content-Type: application/json' -d '{&quot;a&quot;:1}'"></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label">Add to collection</label>
+        <select class="select" id="curl-collection"></select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn--ghost" onclick="closeModal('modal-curl')">Cancel</button>
+        <button class="btn btn--primary" onclick="confirmCurlImport()">Import</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="modal-import">
     <div class="modal">
       <div class="modal-head">
         <h2 class="modal-title">Import</h2>
         <button class="icon-btn" onclick="closeModal('modal-import')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
       </div>
-      <p class="field-help" style="margin-bottom:12px;">Import a Postman Collection v2.1 or Environment JSON file (or CipherDeck export).</p>
+      <p class="field-help" style="margin-bottom:12px;">Import a Postman Collection v2.1 or Environment JSON file (or API Workbench export).</p>
       <input type="file" id="import-file" accept=".json,application/json" class="input" style="padding:8px;"/>
+      <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border-soft);">
+        <span class="eyebrow">Other ways to add</span>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+          <button type="button" class="btn btn--ghost btn--sm" onclick="closeModal('modal-import'); openCurlImport()">Import cURL</button>
+          <button type="button" class="btn btn--ghost btn--sm" onclick="closeModal('modal-import'); loadSampleApi()" title="Adds a sample collection with AES-encrypted request and response scripts">Load sample API</button>
+        </div>
+      </div>
       <div class="modal-actions">
         <button class="btn btn--ghost" onclick="closeModal('modal-import')">Cancel</button>
         <button class="btn btn--primary" onclick="doImport()">Import</button>
@@ -1489,7 +1530,7 @@
         <select class="select" id="export-type">
           <option value="collection">Collection (Postman v2.1)</option>
           <option value="environment">Environment (Postman)</option>
-          <option value="all">All data (CipherDeck backup)</option>
+          <option value="all">All data (API Workbench backup)</option>
         </select>
       </div>
       <div class="field" id="export-collection-wrap">
@@ -1576,7 +1617,7 @@
   <div class="modal-overlay" id="modal-storage">
     <div class="modal">
       <div class="modal-head">
-        <h2 class="modal-title">Data storage</h2>
+        <h2 class="modal-title">Data storage &amp; network</h2>
         <button class="icon-btn" onclick="closeModal('modal-storage')"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
       </div>
       <div class="alert success" style="grid-template-columns:1fr; margin-bottom:14px;">
@@ -1587,12 +1628,16 @@
         <label class="field-label">Current data file</label>
         <div class="mono" id="storage-path" style="padding:8px 10px; border:1px solid var(--border); border-radius:6px; background:var(--bg-muted); font-size:12px; word-break:break-all; user-select:text;"></div>
       </div>
+      <label id="tls-row" style="display:none; align-items:center; gap:8px; margin:0 0 12px; font-size:13px; cursor:pointer;">
+        <input type="checkbox" id="opt-insecure-tls" onchange="setInsecureTls(this.checked)"/>
+        Allow self-signed / invalid TLS certificates (for local HTTPS development)
+      </label>
       <div id="storage-actions" style="display:flex; gap:8px; flex-wrap:wrap;">
         <button class="btn btn--ghost btn--sm" onclick="revealStorage()">Reveal in file explorer</button>
         <button class="btn btn--primary btn--sm" onclick="changeStorage(false)">Change folder&hellip;</button>
         <button class="btn btn--ghost btn--sm" onclick="changeStorage(true)">Use default location</button>
       </div>
-      <p class="field-help" id="storage-help" style="margin-top:12px;">Your current data is copied to the new folder as <code>workbench-data.json</code>. If that folder already contains one, it is loaded instead and nothing is overwritten.</p>
+      <p class="field-help" id="storage-help" style="margin-top:12px;">Your current data is copied to the new folder as <code>workbench-data.json</code>, with saved responses kept next to it in <code>workbench-data.responses.json</code>. If that folder already contains one, it is loaded instead and nothing is overwritten.</p>
       <div class="modal-actions">
         <button class="btn btn--primary" onclick="closeModal('modal-storage')">Close</button>
       </div>
@@ -1603,101 +1648,118 @@
   /* =========================================================================
      State & persistence
      ========================================================================= */
-  const STORAGE_KEY = 'cipherdeck-api-workbench-v1';
+  const STORAGE_KEY = 'api-workbench-v1';
 
 
-  /* ---- Tauri desktop bridge (no CORS; HTTP runs in Rust) ---- */
-  // Detect Tauri in both dev and production (injection timing can differ)
-  function detectTauri() {
-    try {
-      if (typeof window === 'undefined') return false;
-      if (window.__TAURI__) return true;
-      if (window.__TAURI_IPC__) return true;
-      if (navigator.userAgent && navigator.userAgent.includes('Tauri')) return true;
-    } catch (e) {}
-    return false;
-  }
-  let IS_TAURI = detectTauri();
-  const IS_VSCODE = false;
-  let IS_DESKTOP = IS_TAURI;
+  /* ---- VS Code extension bridge (no CORS) ---- */
+  const vscodeApi = (typeof window !== 'undefined' && window.vscodeApi)
+    || (typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : null);
+  const IS_VSCODE = !!(vscodeApi || (typeof window !== 'undefined' && window.__VSCODE_API_WORKBENCH__));
 
-  if (IS_TAURI) {
+  if (IS_VSCODE) {
     try { document.body.classList.add('is-vscode'); } catch (e) {}
   }
 
-  function getInvoke() {
-    const api = window.__TAURI__;
-    if (!api) return null;
-    if (api.tauri && typeof api.tauri.invoke === 'function') return api.tauri.invoke.bind(api.tauri);
-    if (api.core && typeof api.core.invoke === 'function') return api.core.invoke.bind(api.core);
-    if (typeof api.invoke === 'function') return api.invoke.bind(api);
-    return null;
+  /* ---- Tauri desktop bridge (Windows / macOS / Linux, Tauri v1 and v2) ---- */
+  const tauriInvoke = (window.__TAURI_INTERNALS__ && window.__TAURI_INTERNALS__.invoke)
+    || (window.__TAURI__ && window.__TAURI__.core && window.__TAURI__.core.invoke)          // v2 (withGlobalTauri)
+    || (window.__TAURI__ && window.__TAURI__.tauri && window.__TAURI__.tauri.invoke) || null; // v1 (withGlobalTauri)
+  const IS_TAURI = !!tauriInvoke;
+  const HAS_HOST = IS_VSCODE || IS_TAURI;   // a native host does HTTP, storage and clipboard (no CORS)
+  if (IS_TAURI) {
+    const ua = navigator.userAgent || '';
+    document.body.classList.add('is-tauri', /Mac/i.test(ua) ? 'os-mac' : /Win/i.test(ua) ? 'os-win' : 'os-linux');
   }
-
-  function waitForTauri(maxMs) {
-    maxMs = maxMs == null ? 4000 : maxMs;
-    return new Promise((resolve) => {
-      if (getInvoke()) { IS_TAURI = true; IS_DESKTOP = true; resolve(true); return; }
-      const t0 = Date.now();
-      const timer = setInterval(() => {
-        if (getInvoke()) {
-          clearInterval(timer);
-          IS_TAURI = true; IS_DESKTOP = true;
-          try { document.body.classList.add('is-vscode'); } catch (e) {}
-          resolve(true);
-        } else if (Date.now() - t0 > maxMs) {
-          clearInterval(timer);
-          resolve(false);
-        }
-      }, 40);
+  function tauriCall(cmd, args, timeoutMs) {
+    let timer;
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error('Desktop host timed out')), timeoutMs || 15000);
     });
+    return Promise.race([tauriInvoke(cmd, args || {}), timeout])
+      .catch(e => { throw new Error(typeof e === 'string' ? e : (e && e.message) || String(e)); })
+      .finally(() => clearTimeout(timer));
   }
-
-  function tauriInvoke(cmd, args) {
-    return waitForTauri(4000).then((ok) => {
-      const inv = getInvoke();
-      if (!inv) return Promise.reject(new Error('Tauri API not available (production bridge)'));
-      return inv(cmd, args || {});
-    });
+  const TAURI_HOST_CMDS = {
+    stateLoad: 'state_load', stateSave: 'state_save',
+    storageSet: 'storage_set', revealDataFile: 'reveal_data_file',
+    saveTextFile: 'save_text_file'
+  };
+  async function tauriHostCall(type, extra, timeoutMs) {
+    if (type === 'clipboardWrite') {
+      await tauriCall('clipboard_write', { text: extra.data });
+      return { ok: true };
+    }
+    if (type === 'clipboardRead') {
+      return { data: (await tauriCall('clipboard_read', {})) || '' };
+    }
+    if (type === 'saveTextFile') {
+      const saved = await tauriCall('save_text_file', {
+        filename: (extra && extra.filename) || 'export.json',
+        contents: (extra && extra.contents) || ''
+      }, timeoutMs || 300000);
+      return { ok: true, file: saved || null, cancelled: !saved };
+    }
+    const cmd = TAURI_HOST_CMDS[type];
+    if (!cmd) throw new Error('Unknown host call: ' + type);
+    return tauriCall(cmd, extra, timeoutMs);
+  }
+  // One entry point for HTTP: Tauri (Rust/reqwest) or the VS Code extension host
+  function hostHttp(payload) {
+    return IS_TAURI
+      ? tauriCall('http_request', { payload: payload }, ((payload && payload.timeoutMs) || 60000) + 5000)
+      : extensionFetch(payload);
   }
 
   function extensionFetch(payload) {
-    return tauriInvoke('http_request', {
-      payload: {
-        method: payload.method,
-        url: payload.url,
-        headers: payload.headers || {},
-        body: payload.body,
-        bodyBase64: payload.bodyBase64,
-        multipart: payload.multipart,
-        timeoutMs: payload.timeoutMs || 60000,
-        allowInsecureTls: !!(window.__ALLOW_INSECURE_TLS__)
+    return new Promise((resolve, reject) => {
+      if (!vscodeApi) {
+        reject(new Error('VS Code API not available'));
+        return;
       }
+      const id = 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+      let timer = null;
+      const handler = (event) => {
+        const msg = event.data;
+        if (!msg || msg.type !== 'httpResponse' || msg.id !== id) return;
+        clearTimeout(timer);
+        window.removeEventListener('message', handler);
+        if (msg.ok) resolve(msg.result);
+        else reject(new Error(msg.error || 'Request failed'));
+      };
+      window.addEventListener('message', handler);
+      vscodeApi.postMessage({ type: 'httpRequest', id: id, payload: payload });
+      // safety timeout
+      timer = setTimeout(() => {
+        window.removeEventListener('message', handler);
+        reject(new Error('Extension host request timed out'));
+      }, (payload && payload.timeoutMs) || 65000);
     });
   }
 
+  /* ---- Generic request/response channel to the extension host (state file I/O) ---- */
+  const _pendingRpc = {};
+  window.addEventListener('message', (event) => {
+    const m = event.data;
+    if (!m || !m.id || !_pendingRpc[m.id]) return;
+    const p = _pendingRpc[m.id];
+    delete _pendingRpc[m.id];
+    clearTimeout(p.timer);
+    if (m.ok === false) p.reject(new Error(m.error || 'Extension host error'));
+    else p.resolve(m);
+  });
   function hostCall(type, extra, timeoutMs) {
-    if (type === 'stateLoad') {
-      return tauriInvoke('state_load').then(r => ({ ok: true, data: r.data, warning: r.warning, file: r.file }));
-    }
-    if (type === 'stateSave') {
-      return tauriInvoke('state_save', { data: extra && extra.data }).then(r => ({ ok: true, file: r.file }));
-    }
-    if (type === 'revealDataFile') {
-      return tauriInvoke('reveal_data_file').then(() => ({ ok: true }));
-    }
-    if (type === 'storageSet') {
-      return tauriInvoke('storage_set', {
-        args: {
-          reset: !!(extra && extra.reset),
-          data: extra && extra.data,
-          path: extra && extra.path
-        }
-      }).then(r => ({ ok: true, file: r.file, existed: r.existed, cancelled: r.cancelled }));
-    }
-    return Promise.reject(new Error('Unknown host call: ' + type));
+    if (IS_TAURI) return tauriHostCall(type, extra || {}, timeoutMs);
+    return new Promise((resolve, reject) => {
+      if (!vscodeApi) { reject(new Error('VS Code API not available')); return; }
+      const id = 'rpc_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+      const timer = setTimeout(() => {
+        delete _pendingRpc[id];
+        reject(new Error('Extension host timed out'));
+      }, timeoutMs || 15000);
+      _pendingRpc[id] = { resolve, reject, timer };
+      vscodeApi.postMessage(Object.assign({ type: type, id: id }, extra || {}));
+    });
   }
-
   function fileToBase64(file) {
     return new Promise((resolve, reject) => {
       const r = new FileReader();
@@ -1706,6 +1768,7 @@
       r.readAsDataURL(file);
     });
   }
+
 
   /* ---- In-page dialogs (alert/confirm/prompt are blocked in VS Code webviews) ---- */
   function notify(msg) { showToast(String(msg), /fail|unrecogn|choose/i.test(msg) ? 'danger' : 'success'); }
@@ -1749,11 +1812,11 @@
     const b = document.getElementById('env-badge');
     if (!b) return;
     currentDataFile = file || null;
-    if (IS_DESKTOP && file) {
+    if (HAS_HOST && file) {
       b.textContent = file.length > 52 ? '\u2026' + file.slice(-51) : file;
       b.title = file + '\n(click to view or change the storage location)';
-    } else if (!IS_DESKTOP) {
-      b.textContent = IS_TAURI ? 'Local data file' : 'Browser localStorage';
+    } else if (!HAS_HOST) {
+      b.textContent = 'Browser localStorage';
       b.title = 'Click for details';
     }
     b.classList.add('clickable');
@@ -1766,10 +1829,7 @@
     let parsed = null;
     let canSave = true;
     try {
-      // Production builds may inject __TAURI__ slightly after the script runs
-      await waitForTauri(4000);
-      IS_DESKTOP = IS_TAURI = detectTauri() || !!getInvoke();
-      if (IS_DESKTOP) {
+      if (HAS_HOST) {
         const r = await hostCall('stateLoad', {});
         parsed = r.data || null;
         setStorageBadge(r.file);
@@ -1786,7 +1846,7 @@
     } catch (e) {
       console.warn('Failed to load state', e);
       // Do not overwrite the data file if we could not read it
-      if (IS_DESKTOP) { canSave = false; showToast('Could not read data file: ' + (e.message || e), 'danger'); }
+      if (HAS_HOST) { canSave = false; showToast('Could not read data file: ' + (e.message || e), 'danger'); }
     }
     if (parsed) state = { ...state, ...parsed };
     if (!state.collections.length) {
@@ -1827,9 +1887,9 @@
       if (sw) sw.checked = state.theme === 'dark';
       applyTheme(state.theme === 'dark');
     }
-    if (!IS_DESKTOP) setStorageBadge();
+    if (!HAS_HOST) setStorageBadge();
     _stateLoaded = canSave;
-    if (canSave && IS_DESKTOP && parsed) saveStateNow(); // persist migrated data to the file
+    if (canSave && HAS_HOST && parsed) saveStateNow(); // persist migrated data to the file
   }
 
   function snapshotState() {
@@ -1843,7 +1903,8 @@
       collapsedCollections: state.collapsedCollections || {},
       history: state.history.slice(0, 50),
       savedResponses: state.savedResponses.slice(0, 30),
-      theme: state.theme || null
+      theme: state.theme || null,
+      insecureTls: !!state.insecureTls
     };
   }
 
@@ -1854,7 +1915,7 @@
     clearTimeout(_saveT);
     if (!_stateLoaded) return;
     const data = snapshotState();
-    if (IS_DESKTOP) {
+    if (HAS_HOST) {
       _saveChain = _saveChain
         .then(() => hostCall('stateSave', { data: data }, 30000))
         .then(r => { if (r && r.file) setStorageBadge(r.file); })
@@ -1993,7 +2054,12 @@
         }
       };
 
-      actions.append(addBtn, renColBtn, delBtn);
+      const curlBtn = document.createElement('button');
+      curlBtn.className = 'icon-btn';
+      curlBtn.title = 'Import cURL into this collection';
+      curlBtn.innerHTML = '<span style="font:700 9px JetBrains Mono,monospace">cURL</span>';
+      curlBtn.onclick = (e) => { e.stopPropagation(); openCurlImport('', col.id); };
+      actions.append(addBtn, curlBtn, renColBtn, delBtn);
       folder.append(chevron, nameSpan, actions);
       folder.onclick = (e) => {
         if (e.target.closest('button')) return;
@@ -2153,7 +2219,7 @@
         <option value="file" ${data.type === 'file' ? 'selected' : ''}>File</option>
       </select></td>
       <td class="kv-value"><input class="input" placeholder="Value" value="${esc(data.value || '')}" data-type="text"/>
-        <input type="file" class="input form-data-file" style="display:none; padding:4px;" data-type="file"/></td>
+        <input type="file" multiple class="input form-data-file" style="display:none; padding:4px;" data-type="file"/></td>
       <td class="kv-del"><button class="icon-btn" type="button"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></td>`;
     const typeSel = tr.querySelector('select');
     const textIn = tr.querySelector('[data-type=text]');
@@ -2175,8 +2241,8 @@
       const type = tr.querySelector('select').value;
       if (!key) return;
       if (type === 'file') {
-        const file = tr.querySelector('[data-type=file]').files[0];
-        rows.push({ key, type: 'file', file, enabled });
+        const files = Array.from(tr.querySelector('[data-type=file]').files || []);
+        rows.push({ key, type: 'file', files, file: files[0], enabled });
       } else {
         rows.push({ key, type: 'text', value: tr.querySelector('[data-type=text]').value, enabled });
       }
@@ -2375,6 +2441,7 @@
     if (box) box.innerHTML = '';
     if (!code || !code.trim()) {
       if (box) box.innerHTML = '<div class="sc-empty">No script.</div>';
+      if (box && box.id) updateConsoleCount(box.id);
       return { logs: [], tests: [], pm: null };
     }
     const api = createPmApi(ctx);
@@ -2400,6 +2467,7 @@
         });
       }
     }
+    if (box && box.id) updateConsoleCount(box.id);
     return { logs: api.logs, tests: api.tests, pm: api.pm, requestBody: api.requestBody() };
   }
 
@@ -2419,6 +2487,78 @@
       addKvRow('headers', { key, value, enabled: true });
     }
     showToast('Header ' + key + ' set', 'success');
+  }
+
+  /* ---- Copy / paste the whole header set (to reuse it in a different API) ---- */
+  async function clipboardWriteText(text) {
+    if (HAS_HOST) { await hostCall('clipboardWrite', { data: text }); return; }
+    await navigator.clipboard.writeText(text);
+  }
+  async function clipboardReadText() {
+    if (HAS_HOST) { const r = await hostCall('clipboardRead', {}); return r.data || ''; }
+    return await navigator.clipboard.readText();
+  }
+
+  async function copyAllHeaders() {
+    const rows = getKvRows('headers').filter(h => h.enabled);
+    if (!rows.length) { showToast('No enabled headers to copy', 'danger'); return; }
+    const obj = {};
+    rows.forEach(h => { obj[h.key] = h.value; });
+    try {
+      await clipboardWriteText(JSON.stringify(obj, null, 2));
+      showToast('Copied ' + rows.length + ' header' + (rows.length === 1 ? '' : 's'), 'success');
+    } catch (e) {
+      showToast('Could not copy headers: ' + (e.message || e), 'danger');
+    }
+  }
+
+  // Accepts: a JSON object, a JSON array of {key,value}, cURL "-H 'K: V'" flags, or "Key: Value" lines.
+  function parseHeaderText(text) {
+    text = String(text || '').trim();
+    if (!text) return [];
+    try {
+      const j = JSON.parse(text);
+      if (Array.isArray(j)) {
+        return j.filter(x => x && (x.key || x.name))
+                .map(x => ({ key: String(x.key || x.name), value: String(x.value == null ? '' : x.value) }));
+      }
+      if (j && typeof j === 'object') {
+        return Object.keys(j).map(k => ({ key: k, value: String(j[k]) }));
+      }
+    } catch (e) { /* not JSON, fall through */ }
+    const out = [];
+    const flag = /(?:-H|--header)\s+(?:'([^']*)'|"((?:[^"\\]|\\.)*)")/g;
+    let m, sawFlag = false;
+    while ((m = flag.exec(text)) !== null) {
+      sawFlag = true;
+      const line = m[1] != null ? m[1] : m[2].replace(/\\(["\\])/g, '$1');
+      const i = line.indexOf(':');
+      if (i > 0) out.push({ key: line.slice(0, i).trim(), value: line.slice(i + 1).trim() });
+    }
+    if (sawFlag) return out;
+    text.split(/\r?\n/).forEach(l => {
+      const i = l.indexOf(':');
+      if (i > 0) out.push({ key: l.slice(0, i).trim(), value: l.slice(i + 1).trim() });
+    });
+    return out;
+  }
+
+  async function pasteHeaders(replace) {
+    let text;
+    try { text = await clipboardReadText(); }
+    catch (e) { showToast('Could not read the clipboard: ' + (e.message || e), 'danger'); return; }
+    const parsed = parseHeaderText(text);
+    if (!parsed.length) { showToast('No headers found on the clipboard', 'danger'); return; }
+    const rows = replace ? [] : getKvRows('headers');
+    let added = 0, updated = 0;
+    parsed.forEach(h => {
+      const ex = rows.find(r => r.key.toLowerCase() === h.key.toLowerCase());
+      if (ex) { ex.value = h.value; ex.enabled = true; updated++; }
+      else { rows.push({ key: h.key, value: h.value, enabled: true }); added++; }
+    });
+    setKvRows('headers', rows);
+    showToast((replace ? 'Replaced with ' + added : 'Pasted ' + added + ' new') +
+      (updated ? ', updated ' + updated : '') + ' header' + ((added + updated) === 1 ? '' : 's'), 'success');
   }
 
   function duplicateRequest(colId, reqId) {
@@ -2479,10 +2619,11 @@
       indentUnit: 2,
       tabSize: 2,
       theme: cmTheme(),
-      viewportMargin: Infinity
+      viewportMargin: Infinity,
+      extraKeys: { 'Ctrl-/': 'toggleComment', 'Cmd-/': 'toggleComment' }
     };
     const map = [
-      { id: 'raw-body', mode: { name: 'javascript', json: true } },
+      { id: 'raw-body', mode: 'javascript' },
       { id: 'prerequest-script', mode: 'javascript' },
       { id: 'tests-script', mode: 'javascript' }
     ];
@@ -2490,23 +2631,12 @@
       const ta = document.getElementById(id);
       if (!ta || cmEditors[id]) return;
       cmEditors[id] = CodeMirror.fromTextArea(ta, { ...common, mode });
-      cmEditors[id].setSize('100%', id === 'raw-body' ? 220 : 200);
+      if (id === 'raw-body') cmEditors[id].setSize('100%', 220);
       cmEditors[id].on('change', (cm, ch) => { if (ch.origin !== 'setValue') markDirty(); });
     });
-    // Update JSON mode when raw language changes
     const rawLang = document.getElementById('raw-lang');
-    if (rawLang) {
-      rawLang.addEventListener('change', () => {
-        if (!cmEditors['raw-body']) return;
-        const v = rawLang.value;
-        let mode = 'javascript';
-        if (v === 'json') mode = { name: 'javascript', json: true };
-        else if (v === 'xml' || v === 'html') mode = 'xml';
-        else if (v === 'javascript') mode = 'javascript';
-        else mode = null;
-        cmEditors['raw-body'].setOption('mode', mode);
-      });
-    }
+    if (rawLang) rawLang.addEventListener('change', updateRawMode);
+    updateRawMode();
   }
 
   function refreshCmEditors() {
@@ -2668,7 +2798,7 @@
 
     // Initial body from UI (may be replaced by pre-request)
     let bodyTextForScript = '';
-    if (bodyType === 'raw') bodyTextForScript = getEditorValue('raw-body');
+    if (bodyType === 'raw') bodyTextForScript = getRawBodyForSend();
     else if (bodyType === 'graphql') {
       bodyTextForScript = JSON.stringify({
         query: document.getElementById('gql-query').value,
@@ -2720,7 +2850,7 @@
 
     try {
       if (bt === 'raw') {
-        body = preBodyOverride != null ? interpolate(preBodyOverride, getActiveEnvVars()) : interpolate(getEditorValue('raw-body'), vars);
+        body = preBodyOverride != null ? interpolate(preBodyOverride, getActiveEnvVars()) : interpolate(getRawBodyForSend(), vars);
         const lang = document.getElementById('raw-lang').value;
         if (lang === 'json' && !headers['Content-Type'] && !headers['content-type']) {
           headers['Content-Type'] = 'application/json';
@@ -2735,18 +2865,19 @@
         if (!headers['Content-Type']) headers['Content-Type'] = 'application/x-www-form-urlencoded';
       } else if (bt === 'form-data') {
         const rows = getFormDataRows().filter(r => r.enabled);
-        if (IS_DESKTOP) {
+        if (HAS_HOST) {
           multipartParts = [];
           for (const r of rows) {
             const name = interpolate(r.key, vars);
             if (r.type === 'file') {
-              if (!r.file) continue;
-              multipartParts.push({
-                name: name,
-                filename: r.file.name,
-                contentType: r.file.type || 'application/octet-stream',
-                dataBase64: await fileToBase64(r.file)
-              });
+              for (const f of (r.files || [])) {
+                multipartParts.push({
+                  name: name,
+                  filename: f.name,
+                  contentType: f.type || 'application/octet-stream',
+                  dataBase64: await fileToBase64(f)
+                });
+              }
             } else {
               multipartParts.push({ name: name, value: interpolate(r.value || '', vars) });
             }
@@ -2754,7 +2885,7 @@
         } else {
           const fd = new FormData();
           rows.forEach(r => {
-            if (r.type === 'file' && r.file) fd.append(interpolate(r.key, vars), r.file);
+            if (r.type === 'file') (r.files || []).forEach(f => fd.append(interpolate(r.key, vars), f));
             else fd.append(interpolate(r.key, vars), interpolate(r.value || '', vars));
           });
           body = fd;
@@ -2764,7 +2895,7 @@
       } else if (bt === 'binary') {
         const file = document.getElementById('binary-file').files[0];
         if (file) {
-          if (IS_DESKTOP) bodyBase64 = await fileToBase64(file);
+          if (HAS_HOST) bodyBase64 = await fileToBase64(file);
           else body = file;
         }
       } else if (bt === 'graphql') {
@@ -2794,15 +2925,16 @@
       const candidates = [{ label: 'direct', fetchUrl: url }];
 
       // VS Code extension host: no CORS, direct Node HTTP
-      if (IS_DESKTOP) {
-        const result = await extensionFetch({
+      if (HAS_HOST) {
+        const result = await hostHttp({
           method,
           url,
           headers: fetchHeaders,
           body: method === 'GET' || method === 'HEAD' ? undefined : body,
           bodyBase64: method === 'GET' || method === 'HEAD' ? undefined : (bodyBase64 || undefined),
           multipart: method === 'GET' || method === 'HEAD' ? undefined : (multipartParts || undefined),
-          timeoutMs: 60000
+          timeoutMs: 60000,
+          insecureTls: !!state.insecureTls
         });
         lastResponse = {
           status: result.status,
@@ -2898,11 +3030,14 @@
       document.getElementById('res-time').textContent = '—';
       document.getElementById('res-size').textContent = '—';
       let msg = e.message || String(e);
-      if (IS_DESKTOP) {
+      if (HAS_HOST) {
         msg = 'Request failed\n\n' + msg + '\n\n' +
-          (/ECONNREFUSED/i.test(msg) ? 'Nothing is listening at that address. Start your server and check the port.' :
-           /ENOTFOUND/i.test(msg) ? 'Host name could not be resolved. Check the URL.' :
-           /CERT|SELF.SIGNED/i.test(msg) ? 'TLS certificate rejected. For local HTTPS with self-signed certs, enable insecure TLS in the app settings (or set allowInsecureTls on the request).' : '');
+          (/ECONNREFUSED|connection refused/i.test(msg) ? 'Nothing is listening at that address. Start your server and check the port.' :
+           /ENOTFOUND|dns error|failed to lookup/i.test(msg) ? 'Host name could not be resolved. Check the URL.' :
+           /CERT|SELF.SIGNED|certificate/i.test(msg) ? (IS_TAURI
+             ? 'TLS certificate rejected. For local HTTPS, enable "Allow self-signed certificates" (click the storage badge in the top bar).'
+             : 'TLS certificate rejected. Enable "apiWorkbench.allowInsecureTls" in VS Code settings for local HTTPS.') :
+           /timed out|timeout/i.test(msg) ? 'The server did not answer in time.' : '');
       } else if (/proxy is not running/i.test(msg)) {
         // already a clear message from health check
       } else if (/failed to fetch|networkerror|load failed/i.test(msg)) {
@@ -3140,7 +3275,7 @@
     else if (active === 'headers' && lastResponse) {
       text = Object.entries(lastResponse.headers).map(([k, v]) => k + ': ' + v).join('\n');
     } else text = document.getElementById('res-pretty').value;
-    navigator.clipboard.writeText(text || '').catch(() => {});
+    clipboardWriteText(text || '').catch(() => {});
   }
 
   function storeCurrentResponse() {
@@ -3191,7 +3326,7 @@
   }
 
   /* =========================================================================
-     Tree rendering (simplified from CipherDeck)
+     Tree rendering (simplified from API Workbench)
      ========================================================================= */
   function jtJsonNode(value, key, isArrayIndex) {
     const wrap = document.createElement('div');
@@ -3409,6 +3544,7 @@
     const body = req.body || {};
     setEditorValue('raw-body', body.raw || '');
     document.getElementById('raw-lang').value = body.rawLang || 'json';
+    updateRawMode();
     document.getElementById('gql-query').value = body.graphqlQuery || '';
     document.getElementById('gql-vars').value = body.graphqlVars || '';
     setKvRows('urlencoded', body.urlencoded || []);
@@ -3444,6 +3580,7 @@
     const c = (t && t.consoles) || {};
     document.getElementById('prerequest-console').innerHTML = c.pre || CONSOLE_DEFAULTS.pre;
     document.getElementById('tests-console').innerHTML = c.tests || CONSOLE_DEFAULTS.tests;
+    updateConsoleCount('prerequest-console'); updateConsoleCount('tests-console');
   }
   function resetResponse() {
     lastResponse = null;
@@ -3994,7 +4131,7 @@
           // Postman Environment
           importPostmanEnvironment(data);
         } else if (data.collections || data.environments) {
-          // CipherDeck backup
+          // API Workbench backup
           if (data.collections) state.collections = data.collections;
           if (data.environments) state.environments = data.environments;
           if (data.activeEnvId) state.activeEnvId = data.activeEnvId;
@@ -4003,7 +4140,7 @@
           renderEnvironments();
           notify('Backup imported.');
         } else {
-          notify('Unrecognized format. Expect Postman Collection v2.1, Environment, or CipherDeck backup.');
+          notify('Unrecognized format. Expect Postman Collection v2.1, Environment, or API Workbench backup.');
         }
         closeModal('modal-import');
       } catch (e) {
@@ -4112,10 +4249,12 @@
         activeEnvId: state.activeEnvId,
         exportedAt: new Date().toISOString()
       };
-      filename = 'cipherdeck-api-backup.json';
+      filename = 'api-backup.json';
     }
-    downloadJson(filename, payload);
     closeModal('modal-export');
+    downloadJson(filename, payload).catch((e) => {
+      showToast('Export failed: ' + (e.message || e), 'danger');
+    });
   }
 
   function toPostmanCollection(col) {
@@ -4172,13 +4311,68 @@
     };
   }
 
-  function downloadJson(filename, obj) {
-    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+  async function downloadJson(filename, obj) {
+    const contents = JSON.stringify(obj, null, 2);
+    // Tauri desktop: native Save As dialog
+    if (IS_TAURI) {
+      try {
+        const saved = await tauriCall('save_text_file', { filename: filename, contents: contents }, 300000);
+        if (saved) showToast('Saved to ' + saved, 'success');
+        else showToast('Save cancelled', 'danger');
+      } catch (e) { showToast('Could not save file: ' + (e.message || e), 'danger'); }
+      return;
+    }
+    // VS Code webview: extension host must write the file (blob downloads are blocked)
+    if (IS_VSCODE) {
+      try {
+        const r = await hostCall('saveTextFile', { filename: filename, contents: contents }, 300000);
+        if (r && r.cancelled) { showToast('Save cancelled', 'danger'); return; }
+        if (r && r.file) showToast('Saved to ' + r.file, 'success');
+        else showToast('File saved', 'success');
+      } catch (e) {
+        // Fallback: try blob download in case the host has no saveTextFile handler yet
+        try {
+          browserDownloadText(filename, contents);
+          showToast('Downloaded (extension save unavailable)', 'success');
+        } catch (e2) {
+          showToast('Could not save file: ' + (e.message || e), 'danger');
+        }
+      }
+      return;
+    }
+    // Plain browser
+    try {
+      browserDownloadText(filename, contents);
+      showToast('Downloaded ' + filename, 'success');
+    } catch (e) {
+      showToast('Download failed: ' + (e.message || e), 'danger');
+    }
+  }
+
+  function browserDownloadText(filename, text) {
+    const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+    // Prefer File System Access API when available (Chrome/Edge)
+    if (typeof window.showSaveFilePicker === 'function') {
+      return window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
+      }).then(async (handle) => {
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      });
+    }
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = filename;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    a.href = url;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 250);
   }
 
   /* =========================================================================
@@ -4284,13 +4478,19 @@
      Storage location dialog
      ========================================================================= */
   function openStorageModal() {
-    document.getElementById('storage-path').textContent = IS_DESKTOP
+    document.getElementById('storage-path').textContent = HAS_HOST
       ? (currentDataFile || 'Loading\u2026')
-      : (IS_TAURI ? (currentDataFile || 'Local data file') : 'Browser localStorage');
-    document.getElementById('storage-actions').style.display = IS_DESKTOP ? 'flex' : 'none';
-    document.getElementById('storage-help').style.display = IS_DESKTOP ? '' : 'none';
+      : 'Browser localStorage (open the desktop app to choose a file location)';
+    document.getElementById('storage-actions').style.display = HAS_HOST ? 'flex' : 'none';
+    document.getElementById('storage-help').style.display = HAS_HOST ? '' : 'none';
+    const tlsRow = document.getElementById('tls-row');
+    if (tlsRow) {
+      tlsRow.style.display = IS_TAURI ? 'flex' : 'none';
+      document.getElementById('opt-insecure-tls').checked = !!state.insecureTls;
+    }
     openModal('modal-storage');
   }
+  function setInsecureTls(on) { state.insecureTls = !!on; saveState(); }
   function revealStorage() { hostCall('revealDataFile', {}).catch(() => {}); }
   async function reloadStateFromFile() {
     const r = await hostCall('stateLoad', {});
@@ -4306,18 +4506,22 @@
     restoreTabs();
   }
   async function changeStorage(reset) {
+    if (!HAS_HOST) {
+      showToast('Change folder is only available in the desktop app or VS Code extension (browser uses localStorage).', 'danger');
+      return;
+    }
     try {
       saveStateNow();
       await _saveChain;
-      let path = null;
-      if (!reset && IS_TAURI) {
-        path = await tauriInvoke('pick_folder');
-        if (!path) return; // cancelled
+      const r = await hostCall('storageSet', { reset: !!reset, data: snapshotState() }, 300000);
+      if (r && r.cancelled) return;
+      if (!r || !r.file) {
+        showToast('Could not change location (host returned no path)', 'danger');
+        return;
       }
-      const r = await hostCall('storageSet', { reset: !!reset, data: snapshotState(), path: path }, 300000);
-      if (r.cancelled) return;
       setStorageBadge(r.file);
-      document.getElementById('storage-path').textContent = r.file;
+      const pathEl = document.getElementById('storage-path');
+      if (pathEl) pathEl.textContent = r.file;
       if (r.existed) {
         await reloadStateFromFile();
         showToast('Loaded existing data from the new location', 'success');
@@ -4445,35 +4649,287 @@ try {
     showToast('Sample API loaded - press Send on the demo request', 'success');
   }
 
+  /* =========================================================================
+     Console toggles (collapsed until clicked)
+     ========================================================================= */
+  document.querySelectorAll('.console-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const box = document.getElementById(btn.dataset.console);
+      const open = box.hasAttribute('hidden');
+      box.toggleAttribute('hidden', !open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  });
+  (function () {
+    if (typeof ResizeObserver === 'undefined') return;
+    let raf = 0;
+    const ro = new ResizeObserver(() => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => { if (typeof refreshCmEditors === 'function') refreshCmEditors(); });
+    });
+    document.querySelectorAll('.script-editor-wrap').forEach(el => ro.observe(el));
+  })();
+  function updateConsoleCount(id) {
+    const box = document.getElementById(id), badge = document.getElementById(id + '-count');
+    if (!box || !badge) return;
+    badge.textContent = box.querySelectorAll('div:not(.sc-empty)').length;
+    badge.className = 'badge' + (box.querySelector('.sc-error') ? ' danger' : '');
+  }
+
+  /* =========================================================================
+     Raw body: line and block comments
+     ========================================================================= */
+  function updateRawMode() {
+    const ed = cmEditors['raw-body'];
+    if (!ed) return;
+    const v = document.getElementById('raw-lang').value;
+    ed.setOption('mode', (v === 'json' || v === 'javascript') ? 'javascript'
+                       : (v === 'xml' || v === 'html') ? 'xml' : null);
+  }
+  function stripJsonComments(s) {
+    let out = '', i = 0, inStr = false;
+    while (i < s.length) {
+      const c = s[i], n = s[i + 1];
+      if (inStr) {
+        out += c;
+        if (c === '\\') { out += s[i + 1] || ''; i += 2; continue; }
+        if (c === '"') inStr = false;
+        i++; continue;
+      }
+      if (c === '"') { inStr = true; out += c; i++; continue; }
+      if (c === '/' && n === '/') { while (i < s.length && s[i] !== '\n') i++; continue; }
+      if (c === '/' && n === '*') { const e = s.indexOf('*/', i + 2); i = e < 0 ? s.length : e + 2; continue; }
+      out += c; i++;
+    }
+    return out;
+  }
+  function getRawBodyForSend() {
+    const raw = getEditorValue('raw-body');
+    return document.getElementById('raw-lang').value === 'json' ? stripJsonComments(raw) : raw;
+  }
+
+  /* =========================================================================
+     cURL export / import
+     ========================================================================= */
+  function shq(s) { return "'" + String(s).replace(/'/g, "'\\''") + "'"; }
+
+  function buildCurl() {
+    const vars = getActiveEnvVars();
+    const method = document.getElementById('req-method').value;
+    let url = interpolate(document.getElementById('req-url').value.trim(), vars);
+    const params = getKvRows('params').filter(p => p.enabled);
+    if (params.length) {
+      try {
+        const u = new URL(url);
+        params.forEach(p => u.searchParams.set(interpolate(p.key, vars), interpolate(p.value, vars)));
+        url = u.toString();
+      } catch (e) {}
+    }
+    const L = ['curl'];
+    if (method === 'HEAD') L.push('-I'); else if (method !== 'GET') L.push('-X ' + method);
+    L.push(shq(url));
+
+    let headers = getKvRows('headers').filter(h => h.enabled);
+    if (bodyType === 'form-data') headers = headers.filter(h => h.key.toLowerCase() !== 'content-type');
+    const hasCT = headers.some(h => h.key.toLowerCase() === 'content-type');
+    headers.forEach(h => L.push('-H ' + shq(interpolate(h.key, vars) + ': ' + interpolate(h.value, vars))));
+
+    if (bodyType === 'raw') {
+      const lang = document.getElementById('raw-lang').value;
+      if (!hasCT && lang === 'json') L.push('-H ' + shq('Content-Type: application/json'));
+      L.push('--data-raw ' + shq(interpolate(getRawBodyForSend(), vars)));
+    } else if (bodyType === 'urlencoded') {
+      getKvRows('urlencoded').filter(r => r.enabled)
+        .forEach(r => L.push('--data-urlencode ' + shq(interpolate(r.key, vars) + '=' + interpolate(r.value, vars))));
+    } else if (bodyType === 'form-data') {
+      getFormDataRows().filter(r => r.enabled).forEach(r => {
+        const k = interpolate(r.key, vars);
+        if (r.type === 'file') (r.files || []).forEach(f => L.push('-F ' + shq(k + '=@' + f.name)));
+        else L.push('-F ' + shq(k + '=' + interpolate(r.value || '', vars)));
+      });
+    } else if (bodyType === 'graphql') {
+      let v = {}; try { v = JSON.parse(interpolate(document.getElementById('gql-vars').value || '{}', vars)); } catch (e) {}
+      if (!hasCT) L.push('-H ' + shq('Content-Type: application/json'));
+      L.push('--data-raw ' + shq(JSON.stringify({ query: interpolate(document.getElementById('gql-query').value, vars), variables: v })));
+    } else if (bodyType === 'binary') {
+      const f = document.getElementById('binary-file').files[0];
+      if (f) L.push('--data-binary ' + shq('@' + f.name));
+    }
+    return L.join(' \\\n  ');
+  }
+
+  async function copyCurl() {
+    try {
+      await clipboardWriteText(buildCurl());
+      showToast('cURL copied (variables resolved)', 'success');
+    } catch (e) { showToast('Could not copy: ' + (e.message || e), 'danger'); }
+  }
+
+  function tokenizeCurl(s) {
+    s = s.replace(/\\\r?\n/g, ' ').replace(/\^\r?\n/g, ' ');
+    const out = []; let cur = '', has = false, i = 0;
+    const esc = { n: '\n', r: '\r', t: '\t', '\\': '\\', "'": "'", '"': '"' };
+    while (i < s.length) {
+      const c = s[i];
+      if (/\s/.test(c)) { if (has) { out.push(cur); cur = ''; has = false; } i++; continue; }
+      if (c === "'") { const j = s.indexOf("'", i + 1); const e = j < 0 ? s.length : j; cur += s.slice(i + 1, e); has = true; i = e + 1; continue; }
+      if (c === '$' && s[i + 1] === "'") {
+        i += 2;
+        while (i < s.length && s[i] !== "'") {
+          if (s[i] === '\\' && i + 1 < s.length) { const n = s[i + 1]; cur += esc[n] !== undefined ? esc[n] : '\\' + n; i += 2; }
+          else cur += s[i++];
+        }
+        i++; has = true; continue;
+      }
+      if (c === '"') {
+        i++;
+        while (i < s.length && s[i] !== '"') {
+          if (s[i] === '\\' && i + 1 < s.length && /["\\$`]/.test(s[i + 1])) { cur += s[i + 1]; i += 2; }
+          else cur += s[i++];
+        }
+        i++; has = true; continue;
+      }
+      if (c === '\\' && i + 1 < s.length) { cur += s[i + 1]; i += 2; has = true; continue; }
+      cur += c; has = true; i++;
+    }
+    if (has) out.push(cur);
+    return out;
+  }
+
+  function parseCurl(text) {
+    const t = tokenizeCurl(String(text).trim());
+    if (!t.length || t[0].toLowerCase() !== 'curl') throw new Error('Not a cURL command');
+    let method = null, url = '', head = false, getMode = false;
+    const headers = [], data = [], urlenc = [], forms = [];
+    const addH = (key, value) => headers.push({ key, value, enabled: true });
+    for (let i = 1; i < t.length; i++) {
+      let a = t[i], val = null;
+      if (a.startsWith('--') && a.includes('=')) { const k = a.indexOf('='); val = a.slice(k + 1); a = a.slice(0, k); }
+      const arg = () => (val !== null ? val : (t[++i] || ''));
+      if (/^-X.+/.test(a)) { method = a.slice(2).toUpperCase(); continue; }
+      switch (a) {
+        case '-X': case '--request': method = arg().toUpperCase(); break;
+        case '-H': case '--header': { const h = arg(); const k = h.indexOf(':'); if (k > 0) addH(h.slice(0, k).trim(), h.slice(k + 1).trim()); break; }
+        case '-d': case '--data': case '--data-raw': case '--data-binary': case '--data-ascii': data.push(arg()); break;
+        case '--data-urlencode': urlenc.push(arg()); break;
+        case '-F': case '--form': case '--form-string': forms.push(arg()); break;
+        case '-u': case '--user': addH('Authorization', 'Basic ' + btoa(arg())); break;
+        case '-b': case '--cookie': addH('Cookie', arg()); break;
+        case '-A': case '--user-agent': addH('User-Agent', arg()); break;
+        case '-e': case '--referer': addH('Referer', arg()); break;
+        case '--url': url = arg(); break;
+        case '-I': case '--head': head = true; break;
+        case '-G': case '--get': getMode = true; break;
+        case '-o': case '--output': case '-m': case '--max-time': case '--connect-timeout':
+        case '-x': case '--proxy': case '--cacert': case '--cert': case '--key': case '-w': arg(); break;
+        default:
+          if (!a.startsWith('-') && !url) url = a;
+      }
+    }
+    if (!url) throw new Error('No URL found in the cURL command');
+
+    const ctH = headers.find(h => h.key.toLowerCase() === 'content-type');
+    const ct = ctH ? ctH.value.toLowerCase() : '';
+    let bodyType = 'none', body = {};
+    const splitKV = (s) => { const k = s.indexOf('='); return k < 0 ? { key: s, value: '' } : { key: s.slice(0, k), value: s.slice(k + 1) }; };
+
+    if (forms.length) {
+      bodyType = 'form-data';
+      body.formdata = forms.map(f => {
+        const kv = splitKV(f);
+        return kv.value.startsWith('@')
+          ? { key: kv.key, type: 'file', value: '', enabled: true }
+          : { key: kv.key, type: 'text', value: kv.value, enabled: true };
+      });
+      for (let i = headers.length - 1; i >= 0; i--) if (headers[i].key.toLowerCase() === 'content-type') headers.splice(i, 1);
+    } else if (getMode && (data.length || urlenc.length)) {
+      const qs = data.concat(urlenc.map(u => { const kv = splitKV(u); return kv.key + '=' + encodeURIComponent(kv.value); })).join('&');
+      url += (url.includes('?') ? '&' : '?') + qs;
+    } else if (urlenc.length || (data.length && ct.includes('x-www-form-urlencoded'))) {
+      bodyType = 'urlencoded';
+      const rows = [];
+      data.join('&').split('&').filter(Boolean).forEach(p => {
+        const kv = splitKV(p);
+        let k = kv.key, v = kv.value;
+        try { k = decodeURIComponent(k.replace(/\+/g, ' ')); v = decodeURIComponent(v.replace(/\+/g, ' ')); } catch (e) {}
+        rows.push({ key: k, value: v, enabled: true });
+      });
+      urlenc.forEach(u => { const kv = splitKV(u); rows.push({ key: kv.key, value: kv.value, enabled: true }); });
+      body.urlencoded = rows;
+    } else if (data.length) {
+      bodyType = 'raw';
+      let raw = data.join('&');
+      let lang = 'text';
+      if (ct.includes('json') || /^\s*[\[{]/.test(raw)) {
+        lang = 'json';
+        try { raw = JSON.stringify(JSON.parse(raw), null, 2); } catch (e) {}
+      } else if (ct.includes('xml') || /^\s*</.test(raw)) lang = 'xml';
+      body.raw = raw; body.rawLang = lang;
+    }
+
+    let name = (head ? 'HEAD' : method) || '';
+    try { const u = new URL(url); name = (name || 'REQ') + ' ' + (u.pathname === '/' ? u.host : u.pathname); }
+    catch (e) { name = (name || 'REQ') + ' ' + url.slice(0, 40); }
+
+    return {
+      id: uid(), name: name.trim(),
+      method: head ? 'HEAD' : (method || ((data.length || urlenc.length || forms.length) && !getMode ? 'POST' : 'GET')),
+      url, params: [], headers, bodyType, body, preRequest: '', tests: ''
+    };
+  }
+
+  function openCurlImport(text, colId) {
+    const sel = document.getElementById('curl-collection');
+    sel.innerHTML = '';
+    state.collections.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c.id; o.textContent = c.name;
+      if (c.id === (colId || state.activeCollectionId)) o.selected = true;
+      sel.appendChild(o);
+    });
+    document.getElementById('curl-input').value = text || '';
+    openModal('modal-curl');
+    setTimeout(() => document.getElementById('curl-input').focus(), 50);
+  }
+
+  function confirmCurlImport() {
+    const col = state.collections.find(c => c.id === document.getElementById('curl-collection').value);
+    if (!col) { showToast('Choose a collection', 'danger'); return; }
+    try {
+      const req = parseCurl(document.getElementById('curl-input').value);
+      col.requests.push(req);
+      if (state.collapsedCollections) state.collapsedCollections[col.id] = false;
+      saveState();
+      renderCollections();
+      closeModal('modal-curl');
+      openRequestTab(col.id, req.id);
+      showToast('Imported: ' + req.name, 'success');
+    } catch (e) { showToast('cURL import failed: ' + e.message, 'danger'); }
+  }
+
+  // Pasting a cURL command into the URL box opens the importer
+  document.getElementById('req-url').addEventListener('paste', (e) => {
+    const txt = (e.clipboardData || window.clipboardData).getData('text');
+    if (/^\s*curl\s/i.test(txt)) { e.preventDefault(); openCurlImport(txt); }
+  });
+
   function openModal(id) { document.getElementById(id).classList.add('is-open'); }
   function closeModal(id) { document.getElementById(id).classList.remove('is-open'); }
   document.querySelectorAll('.modal-overlay').forEach(ov => {
     ov.addEventListener('click', (e) => { if (e.target === ov) ov.classList.remove('is-open'); });
   });
 
-
-  // Production safety: never leave an invisible overlay blocking clicks
-  document.addEventListener('DOMContentLoaded', () => {
-    try {
-      document.querySelectorAll('.modal-overlay.is-open').forEach(el => el.classList.remove('is-open'));
-      const bd = document.getElementById('response-fs-backdrop');
-      if (bd) bd.classList.remove('is-visible');
-      const res = document.getElementById('response-area');
-      if (res) { res.classList.remove('is-fullscreen', 'is-floating'); }
-    } catch (e) {}
-  });
-
   /* =========================================================================
      Init
      ========================================================================= */
-  if (IS_DESKTOP) {
-    document.body.classList.add('is-vscode');
-    const badge = document.createElement('span');
-    badge.className = 'vscode-badge';
-    badge.textContent = 'Desktop · no CORS';
-    const top = document.querySelector('.topbar');
-    if (top) top.appendChild(badge);
-  }
+  // if (IS_VSCODE) {
+  //   document.body.classList.add('is-vscode');
+  //   const badge = document.createElement('span');
+  //   badge.className = 'vscode-badge';
+  //   badge.textContent = 'VS Code · no CORS';
+  //   const top = document.querySelector('.topbar');
+  //   if (top) top.appendChild(badge);
+  // }
   setKvRows('params', []);
   setKvRows('headers', [{ key: 'Accept', value: 'application/json', enabled: true }]);
   setKvRows('urlencoded', []);

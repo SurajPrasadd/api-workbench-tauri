@@ -1,6 +1,6 @@
 # API Workbench (Tauri)
 
-Desktop version of **CipherDeck API Workbench** for **Windows, macOS, and Linux**.
+Desktop version of **API Workbench** for **Windows, macOS, and Linux**.
 
 Same UI as the VS Code extension: collections, environments, pre-request / post-response scripts (CryptoJS), history, saved responses. HTTP runs in the **Rust host** (no CORS). Data is stored in a local JSON file.
 

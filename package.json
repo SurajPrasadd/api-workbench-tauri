@@ -2,7 +2,7 @@
   "name": "api-workbench",
   "version": "1.0.0",
   "private": true,
-  "description": "CipherDeck API Workbench — Tauri desktop app (Windows, macOS, Linux)",
+  "description": "API Workbench — Tauri desktop app (Windows, macOS, Linux)",
   "scripts": {
     "tauri": "tauri",
     "dev": "tauri dev",
@@ -10,6 +10,6 @@
     "info": "tauri info"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^1.6.0"
+    "@tauri-apps/cli": "^2.12.2"
   }
 }

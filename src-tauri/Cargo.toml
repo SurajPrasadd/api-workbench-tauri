@@ -1,29 +1,21 @@
 [package]
 name = "api-workbench"
-version = "1.0.0"
-description = "CipherDeck API Workbench — desktop app (Windows, macOS, Linux)"
-authors = ["SurajPrasad"]
-license = "MIT"
-repository = "https://github.com/SurajPrasadd/apiworkbench"
+version = "0.1.0"
+description = "API Workbench"
 edition = "2021"
-rust-version = "1.70"
+
+[lib]
+name = "api_workbench_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "1.5", features = [] }
+tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "1.6", features = [ "window-hide", "window-close", "window-maximize", "window-set-size", "window-start-dragging", "dialog-all", "window-minimize", "window-unminimize", "window-set-title", "window-unmaximize", "window-show", "shell-open", "fs-all", "path-all"] }
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-clipboard-manager = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-reqwest = { version = "0.11", default-features = false, features = ["json", "multipart", "rustls-tls", "blocking"] }
-tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
-base64 = "0.21"
-dirs = "5"
-open = "5"
-thiserror = "1"
-url = "2"
-mime_guess = "2"
-
-[features]
-default = ["custom-protocol"]
-custom-protocol = ["tauri/custom-protocol"]
+base64 = "0.22"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "multipart", "gzip", "brotli", "deflate", "http2"] }
