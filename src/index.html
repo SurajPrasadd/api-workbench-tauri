@@ -1141,6 +1141,20 @@
     .console-toggle .chev { display:inline-block; transition:transform .12s; }
     .console-toggle[aria-expanded=true] .chev { transform:rotate(90deg); }
     .console-box[hidden] { display:none; }
+    .method-ws { color: var(--teal); }
+    .ws-legend { display:flex; gap:14px; flex-wrap:wrap; padding:2px 0 8px; font:500 11px "JetBrains Mono",monospace; color:var(--t-muted); }
+    .ws-legend b { font-weight:700; }
+    .ws-line { display:flex; gap:10px; align-items:baseline; padding:3px 8px; margin-bottom:2px; border-left:3px solid var(--t-light);
+      border-radius:4px; font:12.5px/1.5 "JetBrains Mono",ui-monospace,monospace; background:var(--bg-muted); }
+    .ws-ts { color:var(--t-light); flex:none; }
+    .ws-tag { flex:none; min-width:66px; font-weight:700; font-size:11px; letter-spacing:.04em; }
+    .ws-msg { flex:1; min-width:0; color:var(--t-base); white-space:pre-wrap; word-break:break-all; }
+    .ws-connect { border-left-color:var(--success); background:var(--success-soft); } .ws-connect .ws-tag, .ws-legend .c-connect { color:var(--success); }
+    .ws-send    { border-left-color:var(--primary); background:var(--primary-soft); } .ws-send .ws-tag, .ws-legend .c-send { color:var(--primary); }
+    .ws-recv    { border-left-color:var(--teal);    background:var(--teal-soft); }    .ws-recv .ws-tag, .ws-legend .c-recv { color:var(--teal); }
+    .ws-close   { border-left-color:var(--danger);  background:var(--danger-soft); }  .ws-close .ws-tag, .ws-legend .c-close { color:var(--danger); }
+    .ws-error   { border-left-color:var(--warning); background:var(--warning-soft); } .ws-error .ws-tag { color:var(--warning); }
+    .ws-info .ws-tag { color:var(--t-muted); }
     .console-box { margin-top:6px; }
     /* Script editors fill the panel; an open console takes its space from the editor */
     .script-editor-wrap { flex:1 1 0; min-height:120px; position:relative; }
@@ -1236,9 +1250,11 @@
           <option value="DELETE">DELETE</option>
           <option value="HEAD">HEAD</option>
           <option value="OPTIONS">OPTIONS</option>
+          <option value="WS">WebSocket</option>
         </select>
         <input class="input url-input" id="req-url" type="text" placeholder="https://api.example.com/{{path}} or {{baseUrl}}/users" spellcheck="false"/>
         <button class="btn btn--primary send-btn" id="btn-send" onclick="sendRequest()">Send</button>
+        <button class="btn btn--ghost send-btn" id="btn-ws-send" style="display:none" disabled onclick="wsSendMessage()" title="Send the Body > raw text as a message">Send msg</button>
         <button class="btn btn--ghost" title="Save request" onclick="saveCurrentRequest()">Save</button>
         <button class="btn btn--ghost" title="Copy as cURL" onclick="copyCurl()">cURL</button>
       </div>
@@ -1371,6 +1387,7 @@
                 <span class="tab" data-resview="raw">Raw</span>
                 <span class="tab" data-resview="tree">Tree</span>
                 <span class="tab" data-resview="headers">Headers</span>
+                <span class="tab" data-resview="ws">WebSocket</span>
               </div>
               <select class="select" id="res-format" style="width:100px;">
                 <option value="auto">Auto</option>
@@ -1394,6 +1411,7 @@
             <pre id="res-pretty-hl" class="json-pretty" style="display:block;"></pre>
             <textarea id="res-raw" class="mono" readonly style="display:none;"></textarea>
             <div id="res-tree" class="jt-tree" style="display:none;"><div class="jt-tree-empty">Send a request to see the tree view.</div></div>
+            <div id="res-ws" style="display:none;"></div>
             <div id="res-headers" style="display:none;">
               <table class="kv-table" id="res-headers-table">
                 <thead><tr><th>Header</th><th>Value</th></tr></thead>
@@ -2779,6 +2797,7 @@
   });
 
   async function sendRequest() {
+    if (document.getElementById('req-method').value === 'WS') { wsToggle(); return; }
     const sendTabId = activeTabId;
     const reqSnapshot = JSON.parse(JSON.stringify(collectCurrentRequestData()));
     const testsCode = reqSnapshot.tests;
@@ -3080,6 +3099,7 @@
     document.getElementById('res-size').textContent = formatBytes(res.size) + (res.viaProxy ? ' · via proxy' : '');
 
     document.getElementById('res-raw').value = res.bodyText;
+    renderWsView(res);
 
     const format = document.getElementById('res-format').value;
     let pretty = res.bodyText;
@@ -3260,6 +3280,7 @@
       document.getElementById('res-raw').style.display = v === 'raw' ? 'block' : 'none';
       document.getElementById('res-tree').style.display = v === 'tree' ? 'block' : 'none';
       document.getElementById('res-headers').style.display = v === 'headers' ? 'block' : 'none';
+      document.getElementById('res-ws').style.display = v === 'ws' ? 'block' : 'none';
     });
   });
 
@@ -3591,6 +3612,7 @@
     document.getElementById('res-pretty').value = '';
     document.getElementById('res-raw').value = '';
     document.getElementById('res-tree').innerHTML = '<div class="jt-tree-empty">Send a request to see the response.</div>';
+    renderWsView(null);
     if (typeof renderPrettyHighlight === 'function') renderPrettyHighlight('', false);
     restoreConsoles(null);
   }
@@ -3630,6 +3652,7 @@
       if (x) x.onclick = (e) => { e.stopPropagation(); closeTab(t.id); };
       list.appendChild(el);
     });
+    wsRefreshUi();
     const a = list.querySelector('.is-active');
     if (a && a.scrollIntoView) a.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
@@ -3684,6 +3707,7 @@
     const idx = openTabs.indexOf(t);
     const wasActive = id === activeTabId;
     openTabs.splice(idx, 1);
+    wsDropTab(id);
     if (wasActive) {
       activeTabId = null;
       activateTab(openTabs[Math.min(idx, openTabs.length - 1)].id);
@@ -3695,6 +3719,7 @@
     const dirty = targets.filter(t => t.dirty).length;
     if (dirty && !(await uiConfirm(dirty + ' tab' + (dirty > 1 ? 's have' : ' has') + ' unsaved changes. Close and discard?', 'Discard'))) return;
     const wasActiveClosed = ids.indexOf(activeTabId) >= 0;
+    ids.forEach(wsDropTab);
     openTabs = openTabs.filter(t => ids.indexOf(t.id) < 0);
     if (wasActiveClosed) activeTabId = null;
     if (!openTabs.length) { newTab(); return; }   // the editor always needs one tab
@@ -4759,6 +4784,7 @@ try {
   }
 
   async function copyCurl() {
+    if (document.getElementById('req-method').value === 'WS') { showToast('cURL export is not available for WebSocket', 'danger'); return; }
     try {
       await clipboardWriteText(buildCurl());
       showToast('cURL copied (variables resolved)', 'success');
@@ -4912,6 +4938,221 @@ try {
     const txt = (e.clipboardData || window.clipboardData).getData('text');
     if (/^\s*curl\s/i.test(txt)) { e.preventDefault(); openCurlImport(txt); }
   });
+
+  /* =========================================================================
+     WebSocket (connection lives in the native host: Tauri/Rust or VS Code)
+     ========================================================================= */
+  const tabWs = {};   // tabId  -> connection
+  const wsById = {};  // connId -> connection
+  const wsIsOpen = (c) => !!c && (c.state === 'open' || c.state === 'connecting');
+
+  // One entry point to the host. Tauri: invoke a command. VS Code: postMessage.
+  function wsHostSend(msg) {
+    if (IS_TAURI) {
+      const a = { connId: msg.connId };
+      let call;
+      if (msg.type === 'wsConnect') {
+        call = tauriCall('ws_connect', Object.assign(a, { url: msg.url, headers: msg.headers || {}, protocols: msg.protocols || [], insecureTls: !!state.insecureTls }));
+      } else if (msg.type === 'wsSend') {
+        call = tauriCall('ws_send', Object.assign(a, { data: msg.data }));
+      } else {
+        call = tauriCall('ws_close', a);
+      }
+      call.catch(e => {
+        wsHandleEvent({ connId: msg.connId, event: 'error', message: e.message || String(e) });
+        if (msg.type === 'wsConnect') wsHandleEvent({ connId: msg.connId, event: 'close', code: 1006, reason: '' });
+      });
+    } else if (vscodeApi) {
+      vscodeApi.postMessage(msg);
+    }
+  }
+
+  // Events coming back from the host
+  function wsListenTauri() {
+    const cb = (e) => {
+      const m = e && (e.payload !== undefined ? e.payload : e);
+      if (m) wsHandleEvent(m);
+    };
+    try {
+      const g = window.__TAURI__;
+      if (g && g.event && typeof g.event.listen === 'function') {
+        Promise.resolve(g.event.listen('ws-event', cb))
+          .then(() => console.log('[ws] listener registered'))
+          .catch((err) => console.warn('[ws] listener failed', err));
+        return;
+      }
+      const I = window.__TAURI_INTERNALS__;
+      if (I && typeof I.transformCallback === 'function' && tauriInvoke) {
+        Promise.resolve(
+          tauriInvoke('plugin:event|listen', {
+            event: 'ws-event',
+            target: { kind: 'Any' },
+            handler: I.transformCallback(cb),
+          })
+        )
+          .then(() => console.log('[ws] listener registered (internals)'))
+          .catch((err) => console.warn('[ws] listener failed', err));
+        return;
+      }
+      console.warn('[ws] no Tauri event API available');
+    } catch (e) {
+      console.warn('[ws] listener setup error', e);
+    }
+  }
+  if (IS_TAURI) wsListenTauri();
+  window.addEventListener('message', (ev) => {
+    const m = ev.data;
+    if (m && m.type === 'wsEvent') wsHandleEvent(m);
+  });
+
+  function wsRefreshUi() {
+    const isWs = document.getElementById('req-method').value === 'WS';
+    const send = document.getElementById('btn-send'), msg = document.getElementById('btn-ws-send');
+    if (!send || !msg) return;
+    const c = tabWs[activeTabId];
+    msg.style.display = isWs ? '' : 'none';
+    msg.disabled = !(c && c.state === 'open');
+    if (!send.disabled) send.textContent = !isWs ? 'Send' : (wsIsOpen(c) ? 'Disconnect' : 'Connect');
+  }
+
+  function wsDropTab(tabId) {
+    const c = tabWs[tabId];
+    if (!c) return;
+    if (wsIsOpen(c)) wsHostSend({ type: 'wsClose', connId: c.id });
+    delete wsById[c.id];
+    delete tabWs[tabId];
+  }
+
+  function wsStamp(ts) {
+    return new Date(ts).toTimeString().slice(0, 8) + '.' + String(ts % 1000).padStart(3, '0');
+  }
+
+  function renderWsView(res) {
+    const el = document.getElementById('res-ws');
+    if (!el) return;
+    const c = res && res.wsConn;
+    if (!c) { el.innerHTML = '<div class="jt-tree-empty">Connect a WebSocket request to see messages here.</div>'; return; }
+    const meta = {
+      connect: ['CONNECT', 'ws-connect'], out: ['SEND', 'ws-send'], in: ['RECEIVE', 'ws-recv'],
+      close: ['CLOSE', 'ws-close'], err: ['ERROR', 'ws-error'], sys: ['INFO', 'ws-info']
+    };
+    const n = (k) => c.log.filter(l => l.kind === k).length;
+    let html = '<div class="ws-legend"><span class="c-connect">\u25cf connect</span>' +
+      '<span class="c-send">\u25cf send <b>' + n('out') + '</b></span>' +
+      '<span class="c-recv">\u25cf receive <b>' + n('in') + '</b></span>' +
+      '<span class="c-close">\u25cf close</span></div>';
+    c.log.forEach(l => {
+      const m = meta[l.kind] || meta.sys;
+      html += '<div class="ws-line ' + m[1] + '"><span class="ws-ts">' + esc(wsStamp(l.ts)) + '</span>' +
+        '<span class="ws-tag">' + m[0] + '</span><span class="ws-msg">' + esc(l.text) + '</span></div>';
+    });
+    el.innerHTML = html;
+  }
+
+  function wsRender(c) {
+    const arrow = { connect: '\u25cf', close: '\u25cb', sys: '\u2022', out: '\u2192', in: '\u2190', err: '\u2717' };
+    const text = c.log.map(l => wsStamp(l.ts) + '  ' + arrow[l.kind] + ' ' + l.text).join('\n');
+    const label = { connecting: 'Connecting\u2026', open: 'Connected', closing: 'Closing\u2026', closed: 'Closed', error: 'Error' }[c.state] || c.state;
+    const res = {
+      status: c.state === 'error' ? 500 : 101, statusText: label, headers: c.headers || {}, wsConn: c,
+      bodyText: text, time: Date.now() - c.t0, size: text.length, url: c.url, method: 'WS', viaProxy: false
+    };
+    const rb = document.querySelector('.response-body');
+    const stick = !rb || rb.scrollHeight - rb.scrollTop - rb.clientHeight < 60;
+    attachResponse(c.tabId, res);
+    if (c.tabId === activeTabId) {
+      lastResponse = res;
+      if (rb && stick) rb.scrollTop = rb.scrollHeight;
+    }
+  }
+
+  function wsLog(c, kind, text) {
+    c.log.push({ ts: Date.now(), kind, text: String(text) });
+    if (c.log.length > 2000) c.log.splice(0, c.log.length - 2000);
+    wsRender(c);
+  }
+
+  function wsToggle() {
+    const c = tabWs[activeTabId];
+    if (wsIsOpen(c)) {
+      c.state = 'closing';
+      wsHostSend({ type: 'wsClose', connId: c.id });
+      wsRender(c); wsRefreshUi();
+      return;
+    }
+    wsConnect();
+  }
+
+  function wsConnect() {
+    if (!HAS_HOST) { showToast('WebSocket works in the desktop app or VS Code only (a browser cannot set handshake headers)', 'danger'); return; }
+    const vars = getActiveEnvVars();
+    let url = interpolate(document.getElementById('req-url').value.trim(), vars)
+      .replace(/^https?:/i, m => (m.toLowerCase() === 'https:' ? 'wss:' : 'ws:'));
+    try {
+      const u = new URL(url);
+      if (!/^wss?:$/i.test(u.protocol)) throw new Error('URL must start with ws:// or wss://');
+      getKvRows('params').filter(p => p.enabled).forEach(p => u.searchParams.set(interpolate(p.key, vars), interpolate(p.value, vars)));
+      url = u.toString();
+    } catch (e) { showToast('Invalid WebSocket URL: ' + e.message, 'danger'); return; }
+
+    const headers = {}; let protocols = [];
+    getKvRows('headers').filter(h => h.enabled).forEach(h => {
+      const k = interpolate(h.key, vars), v = interpolate(h.value, vars);
+      if (k.toLowerCase() === 'sec-websocket-protocol') protocols = v.split(',').map(s => s.trim()).filter(Boolean);
+      else headers[k] = v;
+    });
+
+    const old = tabWs[activeTabId];
+    if (old) delete wsById[old.id];
+    const c = { id: uid(), tabId: activeTabId, state: 'connecting', log: [], t0: Date.now(), url, post: getEditorValue('tests-script'), headers: {} };
+    tabWs[activeTabId] = c; wsById[c.id] = c;
+    wsLog(c, 'connect', 'Connecting to ' + url + ' \u2026');
+    wsRefreshUi();
+    const wsTab = document.querySelector('#res-view-tabs .tab[data-resview="ws"]');
+    if (wsTab) wsTab.click();
+    wsHostSend({ type: 'wsConnect', connId: c.id, url, headers, protocols });
+  }
+
+  function wsSendMessage() {
+    const c = tabWs[activeTabId];
+    if (!c || c.state !== 'open') { showToast('Not connected', 'danger'); return; }
+    let body = getRawBodyForSend();
+    const r = runScript(getEditorValue('prerequest-script'),
+      { request: { method: 'WS', url: c.url, headers: {}, body } }, 'prerequest-console');
+    if (r.pm) body = r.requestBody;
+    body = interpolate(body, getActiveEnvVars());
+    wsHostSend({ type: 'wsSend', connId: c.id, data: body });
+    wsLog(c, 'out', body);
+  }
+
+  function wsRunPost(c, text) {
+    if (!c.post || !c.post.trim()) return text;
+    const res = { status: 101, statusText: 'Message', headers: {}, bodyText: text, time: Date.now() - c.t0, size: text.length };
+    runScript(c.post, { response: res }, c.tabId === activeTabId ? 'tests-console' : document.createElement('div'));
+    return res.bodyText;
+  }
+
+  function wsHandleEvent(m) {
+    if (!m) return;
+    const c = wsById[m.connId];
+    if (!c) return;
+    if (m.event === 'open') {
+      c.state = 'open';
+      c.headers = Object.assign({ ':status': (m.status || 101) + ' ' + (m.statusText || 'Switching Protocols') }, m.headers || {});
+      wsLog(c, 'connect', 'Connected' + (m.protocol ? ' (subprotocol ' + m.protocol + ')' : ''));
+    } else if (m.event === 'message') {
+      const text = m.binary ? '[binary ' + m.size + ' bytes, base64] ' + m.data : wsRunPost(c, m.data);
+      wsLog(c, 'in', text);
+    } else if (m.event === 'error') {
+      if (c.state !== 'open') c.state = 'error';
+      wsLog(c, 'err', m.message);
+    } else if (m.event === 'close') {
+      if (c.state !== 'error') c.state = 'closed';
+      wsLog(c, 'close', 'Closed ' + m.code + (m.reason ? ' ' + m.reason : ''));
+      delete wsById[c.id];
+    }
+    wsRefreshUi();
+  }
 
   function openModal(id) { document.getElementById(id).classList.add('is-open'); }
   function closeModal(id) { document.getElementById(id).classList.remove('is-open'); }
