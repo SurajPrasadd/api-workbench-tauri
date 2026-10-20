@@ -1162,6 +1162,8 @@
     .script-editor-wrap .CodeMirror-scroll { min-height:0; max-height:none; }
     #panel-prerequest > div:last-child, #panel-tests > div:last-child { flex:none; }
     .sidebar-folder .folder-actions .icon-btn { width:24px; }
+    #body-raw { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+    #body-raw .script-editor-wrap { flex: 1 1 0; min-height: 120px; }
   </style>
 </head>
 <body>
@@ -1335,7 +1337,9 @@
               <button class="btn btn--ghost btn--sm" style="margin-top:10px;" onclick="addKvRow('urlencoded')">+ Add field</button>
             </div>
             <div id="body-raw" class="body-panel" style="display:none;">
-              <textarea class="textarea mono" id="raw-body" placeholder='{"key": "value"}' style="min-height:220px; font-family:JetBrains Mono,monospace;"></textarea>
+              <div class="script-editor-wrap">
+                <textarea class="textarea mono" id="raw-body" placeholder='{"key": "value"}' style="font-family:JetBrains Mono,monospace;"></textarea>
+              </div>
             </div>
             <div id="body-binary" class="body-panel" style="display:none;">
               <input type="file" id="binary-file" class="input" style="padding:8px;"/>
@@ -2289,6 +2293,7 @@
       document.querySelectorAll('.body-panel').forEach(p => p.style.display = 'none');
       document.getElementById('body-' + bodyType).style.display = '';
       document.getElementById('raw-lang').style.display = bodyType === 'raw' ? '' : 'none';
+      setTimeout(refreshCmEditors, 30);
     });
   });
 
@@ -2649,7 +2654,6 @@
       const ta = document.getElementById(id);
       if (!ta || cmEditors[id]) return;
       cmEditors[id] = CodeMirror.fromTextArea(ta, { ...common, mode });
-      if (id === 'raw-body') cmEditors[id].setSize('100%', 220);
       cmEditors[id].on('change', (cm, ch) => { if (ch.origin !== 'setValue') markDirty(); });
     });
     const rawLang = document.getElementById('raw-lang');
@@ -3566,6 +3570,7 @@
     setEditorValue('raw-body', body.raw || '');
     document.getElementById('raw-lang').value = body.rawLang || 'json';
     updateRawMode();
+    setTimeout(refreshCmEditors, 30);
     document.getElementById('gql-query').value = body.graphqlQuery || '';
     document.getElementById('gql-vars').value = body.graphqlVars || '';
     setKvRows('urlencoded', body.urlencoded || []);
